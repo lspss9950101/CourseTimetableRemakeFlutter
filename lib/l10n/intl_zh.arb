@@ -14,5 +14,6 @@
   "mainPageDrawerGeneralSettings": "一般設定",
   "mainPageDrawerWidgetSettings": "小工具設定",
   "mainPageDrawerOutputAsImage": "輸出成圖片",
-  "mainPageDrawerSetting": "設定"
+  "mainPageDrawerSetting": "設定",
+  "mainPageDrawerSaveLoadProfile": "SAVE/LOAD PROFILE"
 }

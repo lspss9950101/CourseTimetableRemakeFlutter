@@ -34,6 +34,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "mainPageDrawerOutputAsImage" : MessageLookupByLibrary.simpleMessage("OUTPUT AS IMAGE"),
     "mainPageDrawerPaste" : MessageLookupByLibrary.simpleMessage("PASTE COURSES"),
     "mainPageDrawerPasteSingle" : MessageLookupByLibrary.simpleMessage("PASTE COURSE"),
+    "mainPageDrawerSaveLoadProfile" : MessageLookupByLibrary.simpleMessage("SAVE/LOAD PROFILE"),
     "mainPageDrawerSessionSetting" : MessageLookupByLibrary.simpleMessage("SESSION SETTINGS"),
     "mainPageDrawerSetting" : MessageLookupByLibrary.simpleMessage("SETTINGS"),
     "mainPageDrawerWidgetSettings" : MessageLookupByLibrary.simpleMessage("WIDGET SETTINGS")

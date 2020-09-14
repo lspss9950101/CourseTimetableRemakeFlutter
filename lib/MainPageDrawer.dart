@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'generated/l10n.dart';
+import 'package:outline_material_icons/outline_material_icons.dart';
 
 class MainPageDrawer extends StatefulWidget {
   @override
@@ -9,65 +10,54 @@ class MainPageDrawer extends StatefulWidget {
 class _MainPageDrawerState extends State {
   bool darkMode = false;
 
+  Widget getConstrainedListTile({String title, TextStyle titleStyle, IconData icon, Widget trailing, GestureTapCallback onTap}) => Container(
+        height: 45,
+        child: ListTile(
+          title: Text(
+            title,
+            style: titleStyle,
+          ),
+          leading: icon == null ? null : Icon(icon, color: IconTheme.of(context).color,),
+          trailing: trailing,
+          onTap: onTap,
+        ),
+      );
+
   List<Widget> getCoursesOperations(List copiedCourses, List selectedSession) {
     List result = List<Widget>()
       ..add(
-        ListTile(
-          title: Text(
-            selectedSession.length > 1
-                ? S.of(context).mainPageDrawerAddEdit
-                : S.of(context).mainPageDrawerAddEditSingle,
-            style: Theme.of(context).textTheme.subtitle2,
-          ),
-          leading: Icon(
-            Icons.edit,
-          ),
+        getConstrainedListTile(
+          title: selectedSession.length > 1 ? S.of(context).mainPageDrawerAddEdit : S.of(context).mainPageDrawerAddEditSingle,
+          titleStyle: Theme.of(context).textTheme.subtitle2,
+          icon: OMIcons.edit,
         ),
       )
       ..add(
-        ListTile(
-          title: Text(
-            S.of(context).mainPageDrawerCopy,
-            style: Theme.of(context).textTheme.subtitle2,
-          ),
-          leading: Icon(
-            Icons.content_copy,
-          ),
+        getConstrainedListTile(
+          title: S.of(context).mainPageDrawerCopy,
+          titleStyle: Theme.of(context).textTheme.subtitle2,
+          icon: Icons.content_copy,
         ),
       )
       ..add(
-        ListTile(
-          title: Text(
-            selectedSession.length > 1
-                ? S.of(context).mainPageDrawerPaste
-                : S.of(context).mainPageDrawerPasteSingle,
-            style: Theme.of(context).textTheme.subtitle2,
-          ),
-          leading: Icon(
-            Icons.content_paste,
-          ),
+        getConstrainedListTile(
+          title: selectedSession.length > 1 ? S.of(context).mainPageDrawerPaste : S.of(context).mainPageDrawerPasteSingle,
+          titleStyle: Theme.of(context).textTheme.subtitle2,
+          icon: Icons.content_paste,
         ),
       )
       ..add(
-        ListTile(
-          title: Text(
-            selectedSession.length > 1
-                ? S.of(context).mainPageDrawerDelete
-                : S.of(context).mainPageDrawerDeleteSingle,
-            style: Theme.of(context).textTheme.subtitle2,
-          ),
-          leading: Icon(
-            Icons.delete,
-          ),
+        getConstrainedListTile(
+          title: selectedSession.length > 1 ? S.of(context).mainPageDrawerDelete : S.of(context).mainPageDrawerDeleteSingle,
+          titleStyle: Theme.of(context).textTheme.subtitle2,
+          icon: OMIcons.delete,
         ),
       )
       ..add(
-        ListTile(
-          title: Text(
-            S.of(context).mainPageDrawerDeleteAll,
-            style: Theme.of(context).textTheme.subtitle2,
-          ),
-          leading: Icon(Icons.delete_forever),
+        getConstrainedListTile(
+          title: S.of(context).mainPageDrawerDeleteAll,
+          titleStyle: Theme.of(context).textTheme.subtitle2,
+          icon: OMIcons.deleteForever,
         ),
       );
     if (copiedCourses.length <= 0) result.removeAt(2);
@@ -78,12 +68,10 @@ class _MainPageDrawerState extends State {
   List<Widget> getSettings() {
     List result = List<Widget>()
       ..add(
-        ListTile(
-          title: Text(
-            S.of(context).mainPageDrawerDarkMode,
-            style: Theme.of(context).textTheme.subtitle2,
-          ),
-          leading: Icon(Icons.brightness_3),
+        getConstrainedListTile(
+          title: S.of(context).mainPageDrawerDarkMode,
+          titleStyle: Theme.of(context).textTheme.subtitle2,
+          icon: OMIcons.brightness2,
           trailing: Switch(
             value: darkMode,
             onChanged: (value) {
@@ -95,41 +83,40 @@ class _MainPageDrawerState extends State {
         ),
       )
       ..add(
-        ListTile(
-          title: Text(
-            S.of(context).mainPageDrawerSessionSetting,
-            style: Theme.of(context).textTheme.subtitle2,
-          ),
-          leading: Icon(Icons.event_note),
+        getConstrainedListTile(
+          title: S.of(context).mainPageDrawerSessionSetting,
+          titleStyle: Theme.of(context).textTheme.subtitle2,
+          icon: Icons.event_note,
         ),
       )
       ..add(
-        ListTile(
-          title: Text(
-            S.of(context).mainPageDrawerGeneralSettings,
-            style: Theme.of(context).textTheme.subtitle2,
-          ),
-          leading: Icon(Icons.settings),
+        getConstrainedListTile(
+          title: S.of(context).mainPageDrawerGeneralSettings,
+          titleStyle: Theme.of(context).textTheme.subtitle2,
+          icon: Icons.settings,
         ),
       )
       ..add(
-        ListTile(
-          title: Text(
-            S.of(context).mainPageDrawerWidgetSettings,
-            style: Theme.of(context).textTheme.subtitle2,
-          ),
-          leading: Icon(Icons.settings_applications),
+        getConstrainedListTile(
+          title: S.of(context).mainPageDrawerWidgetSettings,
+          titleStyle: Theme.of(context).textTheme.subtitle2,
+          icon: OMIcons.settingsApplications,
         ),
       )
       ..add(
-        ListTile(
-          title: Text(
-            S.of(context).mainPageDrawerOutputAsImage,
-            style: Theme.of(context).textTheme.subtitle2,
-          ),
-          leading: Icon(Icons.add_photo_alternate),
+        getConstrainedListTile(
+          title: S.of(context).mainPageDrawerOutputAsImage,
+          titleStyle: Theme.of(context).textTheme.subtitle2,
+          icon: Icons.add_photo_alternate,
         ),
-      );
+      )
+    ..add(
+      getConstrainedListTile(
+        title: S.of(context).mainPageDrawerSaveLoadProfile,
+        titleStyle: Theme.of(context).textTheme.subtitle2,
+        icon: OMIcons.save,
+      ),
+    );
     return result;
   }
 
@@ -142,16 +129,11 @@ class _MainPageDrawerState extends State {
           DrawerHeader(
             child: Text(S.of(context).appTitle),
           ),
-          ListTile(
-            title: Text(S.of(context).mainPageDrawerGeneralOperations,
-                style: Theme.of(context).textTheme.subtitle1),
-          ),
+          getConstrainedListTile(title: S.of(context).mainPageDrawerGeneralOperations, titleStyle: Theme.of(context).textTheme.subtitle1),
           ...getCoursesOperations([], []),
-          ListTile(
-            title: Text(
-              S.of(context).mainPageDrawerSetting,
-              style: Theme.of(context).textTheme.subtitle1,
-            ),
+          getConstrainedListTile(
+            title: S.of(context).mainPageDrawerSetting,
+            titleStyle: Theme.of(context).textTheme.subtitle1,
           ),
           ...getSettings(),
         ],

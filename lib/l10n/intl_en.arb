@@ -14,5 +14,6 @@
   "mainPageDrawerGeneralSettings": "GENERAL SETTINGS",
   "mainPageDrawerWidgetSettings": "WIDGET SETTINGS",
   "mainPageDrawerOutputAsImage": "OUTPUT AS IMAGE",
-  "mainPageDrawerSetting": "SETTINGS"
+  "mainPageDrawerSetting": "SETTINGS",
+  "mainPageDrawerSaveLoadProfile": "SAVE/LOAD PROFILE"
 }

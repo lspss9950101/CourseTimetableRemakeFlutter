@@ -192,6 +192,16 @@ class S {
       args: [],
     );
   }
+
+  /// `SAVE/LOAD PROFILE`
+  String get mainPageDrawerSaveLoadProfile {
+    return Intl.message(
+      'SAVE/LOAD PROFILE',
+      name: 'mainPageDrawerSaveLoadProfile',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

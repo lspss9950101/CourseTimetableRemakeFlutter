@@ -7,5 +7,6 @@ class Resources {
     visualDensity: VisualDensity.adaptivePlatformDensity,
     primarySwatch: Colors.deepPurple,
     accentColor: Colors.purpleAccent,
+    iconTheme: IconThemeData(color: Color.fromARGB(255, 70, 70, 70)),
   );
 }
