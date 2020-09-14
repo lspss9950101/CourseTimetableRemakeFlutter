@@ -1,0 +1,18 @@
+{
+  "appTitle": "CourseTimetableRemake",
+  "mainPageDrawerAddEditSingle": "ADD/EDIT COURSE",
+  "mainPageDrawerAddEdit": "ADD/EDIT COURSES",
+  "mainPageDrawerCopy": "COPY COURSE",
+  "mainPageDrawerPasteSingle": "PASTE COURSE",
+  "mainPageDrawerPaste": "PASTE COURSES",
+  "mainPageDrawerDelete": "DELETE COURSES",
+  "mainPageDrawerDeleteSingle": "DELETE COURSE",
+  "mainPageDrawerDeleteAll": "DELETE ALL",
+  "mainPageDrawerGeneralOperations": "GENERAL OPERATIONS",
+  "mainPageDrawerDarkMode": "DARK MODE",
+  "mainPageDrawerSessionSetting": "SESSION SETTINGS",
+  "mainPageDrawerGeneralSettings": "GENERAL SETTINGS",
+  "mainPageDrawerWidgetSettings": "WIDGET SETTINGS",
+  "mainPageDrawerOutputAsImage": "OUTPUT AS IMAGE",
+  "mainPageDrawerSetting": "SETTINGS"
+}

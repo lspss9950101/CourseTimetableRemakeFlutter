@@ -1,0 +1,18 @@
+{
+  "appTitle": "課程時間表Remake",
+  "mainPageDrawerAddEditSingle": "新增/修改課程",
+  "mainPageDrawerAddEdit": "新增/修改課程",
+  "mainPageDrawerCopy": "複製課程",
+  "mainPageDrawerPasteSingle": "貼上課程",
+  "mainPageDrawerPaste": "貼上課程",
+  "mainPageDrawerDelete": "刪除課程",
+  "mainPageDrawerDeleteSingle": "刪除課程",
+  "mainPageDrawerDeleteAll": "刪除全部",
+  "mainPageDrawerGeneralOperations": "一般操作",
+  "mainPageDrawerDarkMode": "夜間模式",
+  "mainPageDrawerSessionSetting": "時段設定",
+  "mainPageDrawerGeneralSettings": "一般設定",
+  "mainPageDrawerWidgetSettings": "小工具設定",
+  "mainPageDrawerOutputAsImage": "輸出成圖片",
+  "mainPageDrawerSetting": "設定"
+}
