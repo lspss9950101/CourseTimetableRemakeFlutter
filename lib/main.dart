@@ -32,13 +32,31 @@ class App extends StatelessWidget {
   }
 }
 
-class MainPage extends StatelessWidget {
+class MainPage extends StatefulWidget {
+  @override
+  State createState() => _MainPageState();
+}
+
+class _MainPageState extends State<MainPage> {
+  bool darkMode = false;
+  List<Session> sessions = List.filled(3, Session.dummy());
+  List<Course> courses = List.filled(21, Course.dummy());
+  List<bool> chosen = List.filled(21, false);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(S.of(context).appTitle)),
-      drawer: MainPageDrawer(),
-      body: Timetable(courses: [for(int i = 0; i < 7; i++) Course.dummy()], sessions: [Session.dummy()],),
+      drawer: MainPageDrawer(courseLayout: darkMode ? CourseLayout.dark() : CourseLayout.light(), darkMode: darkMode, callback: (msg, arg) {
+        switch(msg) {
+          case MainPageCallBackMSG.SET_DARK_MODE:
+            setState(() {
+              darkMode = arg;
+            });
+            break;
+        }
+      },),
+      body: Timetable(courses: courses, sessions: sessions, chosen: chosen, courseLayout: darkMode ? CourseLayout.dark() : CourseLayout.light(),),
     );
   }
 }

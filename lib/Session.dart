@@ -3,6 +3,8 @@ class Session {
   DateTime begin, end;
   Session(this.begin, this.end, {this.name});
   Session.dummy() {
-    this.name = 's';
+    this.name = 'S';
+    this.begin = DateTime.now();
+    this.end = DateTime.now();
   }
 }

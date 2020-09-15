@@ -1,23 +1,41 @@
+import 'package:course_timetable_remake/Resources.dart';
 import 'package:flutter/material.dart';
 import 'generated/l10n.dart';
 import 'package:outline_material_icons/outline_material_icons.dart';
 
 class MainPageDrawer extends StatefulWidget {
+  final void Function(MainPageCallBackMSG msg, dynamic arg) callback;
+  final bool darkMode;
+  final CourseLayout courseLayout;
+
+  MainPageDrawer({Key key, this.callback, this.darkMode, this.courseLayout=const CourseLayout.light()}) : super(key: key);
+
   @override
   State createState() => _MainPageDrawerState();
 }
 
-class _MainPageDrawerState extends State {
-  bool darkMode = false;
+class _MainPageDrawerState extends State<MainPageDrawer> {
+  bool darkMode;
 
-  Widget getConstrainedListTile({String title, TextStyle titleStyle, IconData icon, Widget trailing, GestureTapCallback onTap}) => Container(
+  Widget getConstrainedListTile(
+          {String title,
+          TextStyle titleStyle,
+          IconData icon,
+          Widget trailing,
+          GestureTapCallback onTap}) =>
+      Container(
         height: 45,
         child: ListTile(
           title: Text(
             title,
-            style: titleStyle,
+            style: titleStyle.apply(color: widget.courseLayout.secondaryColor),
           ),
-          leading: icon == null ? null : Icon(icon, color: IconTheme.of(context).color,),
+          leading: icon == null
+              ? null
+              : Icon(
+                  icon,
+                  color: widget.courseLayout.secondaryColor,
+                ),
           trailing: trailing,
           onTap: onTap,
         ),
@@ -27,7 +45,9 @@ class _MainPageDrawerState extends State {
     List result = List<Widget>()
       ..add(
         getConstrainedListTile(
-          title: selectedSession.length > 1 ? S.of(context).mainPageDrawerAddEdit : S.of(context).mainPageDrawerAddEditSingle,
+          title: selectedSession.length > 1
+              ? S.of(context).mainPageDrawerAddEdit
+              : S.of(context).mainPageDrawerAddEditSingle,
           titleStyle: Theme.of(context).textTheme.subtitle2,
           icon: OMIcons.edit,
         ),
@@ -41,14 +61,18 @@ class _MainPageDrawerState extends State {
       )
       ..add(
         getConstrainedListTile(
-          title: selectedSession.length > 1 ? S.of(context).mainPageDrawerPaste : S.of(context).mainPageDrawerPasteSingle,
+          title: selectedSession.length > 1
+              ? S.of(context).mainPageDrawerPaste
+              : S.of(context).mainPageDrawerPasteSingle,
           titleStyle: Theme.of(context).textTheme.subtitle2,
           icon: Icons.content_paste,
         ),
       )
       ..add(
         getConstrainedListTile(
-          title: selectedSession.length > 1 ? S.of(context).mainPageDrawerDelete : S.of(context).mainPageDrawerDeleteSingle,
+          title: selectedSession.length > 1
+              ? S.of(context).mainPageDrawerDelete
+              : S.of(context).mainPageDrawerDeleteSingle,
           titleStyle: Theme.of(context).textTheme.subtitle2,
           icon: OMIcons.delete,
         ),
@@ -77,6 +101,8 @@ class _MainPageDrawerState extends State {
             onChanged: (value) {
               setState(() {
                 darkMode = value;
+                widget.callback(
+                    MainPageCallBackMSG.SET_DARK_MODE, darkMode);
               });
             },
           ),
@@ -110,34 +136,50 @@ class _MainPageDrawerState extends State {
           icon: Icons.add_photo_alternate,
         ),
       )
-    ..add(
-      getConstrainedListTile(
-        title: S.of(context).mainPageDrawerSaveLoadProfile,
-        titleStyle: Theme.of(context).textTheme.subtitle2,
-        icon: OMIcons.save,
-      ),
-    );
+      ..add(
+        getConstrainedListTile(
+          title: S.of(context).mainPageDrawerSaveLoadProfile,
+          titleStyle: Theme.of(context).textTheme.subtitle2,
+          icon: OMIcons.save,
+        ),
+      );
     return result;
   }
 
   @override
   Widget build(BuildContext context) {
+    darkMode = widget.darkMode;
     return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          DrawerHeader(
-            child: Text(S.of(context).appTitle),
-          ),
-          getConstrainedListTile(title: S.of(context).mainPageDrawerGeneralOperations, titleStyle: Theme.of(context).textTheme.subtitle1),
-          ...getCoursesOperations([], []),
-          getConstrainedListTile(
-            title: S.of(context).mainPageDrawerSetting,
-            titleStyle: Theme.of(context).textTheme.subtitle1,
-          ),
-          ...getSettings(),
-        ],
-      ),
+      child: Container(
+        color: widget.courseLayout.primaryColor,
+        child: ScrollConfiguration(
+        behavior: _DrawerListViewBehaviour(),
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              child: Text(S.of(context).appTitle),
+            ),
+            getConstrainedListTile(
+                title: S.of(context).mainPageDrawerGeneralOperations,
+                titleStyle: Theme.of(context).textTheme.subtitle1),
+            ...getCoursesOperations([], []),
+            getConstrainedListTile(
+              title: S.of(context).mainPageDrawerSetting,
+              titleStyle: Theme.of(context).textTheme.subtitle1,
+            ),
+            ...getSettings(),
+          ],
+        ),
+      ),),
     );
+  }
+}
+
+class _DrawerListViewBehaviour extends ScrollBehavior {
+  @override
+  Widget buildViewportChrome(
+      BuildContext context, Widget child, AxisDirection axisDirection) {
+    return child;
   }
 }
