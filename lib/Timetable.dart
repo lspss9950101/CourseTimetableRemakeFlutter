@@ -1,10 +1,14 @@
+import 'dart:ui';
+
 import 'package:course_timetable_remake/Resources.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:outline_material_icons/outline_material_icons.dart';
 
 import 'Course.dart';
 import 'Session.dart';
+import 'generated/l10n.dart';
 
 class Timetable extends StatefulWidget {
   final List<Course> courses;
@@ -12,7 +16,12 @@ class Timetable extends StatefulWidget {
   final List<bool> chosen;
   final CourseLayout courseLayout;
 
-  Timetable({this.courses = const [], this.sessions = const [], this.chosen = const [], this.courseLayout = const CourseLayout.light(), Key key})
+  Timetable(
+      {this.courses = const [],
+      this.sessions = const [],
+      this.chosen = const [],
+      this.courseLayout = const CourseLayout.light(),
+      Key key})
       : super(key: key);
 
   @override
@@ -36,22 +45,34 @@ class _TimetableState extends State<Timetable> {
               session.name,
               softWrap: false,
               overflow: TextOverflow.fade,
-              style: Theme.of(context).textTheme.bodyText2.apply(color: widget.courseLayout.secondaryColor),
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyText2
+                  .apply(color: widget.courseLayout.secondaryColor),
             ),
             Text(
               DateFormat('kk:mm').format(session.begin),
-              style: Theme.of(context).textTheme.caption.apply(color: widget.courseLayout.secondaryColor),
+              style: Theme.of(context)
+                  .textTheme
+                  .caption
+                  .apply(color: widget.courseLayout.secondaryColor),
             ),
             RotatedBox(
               quarterTurns: 1,
               child: Text(
                 '~',
-                style: Theme.of(context).textTheme.caption.apply(color: widget.courseLayout.secondaryColor),
+                style: Theme.of(context)
+                    .textTheme
+                    .caption
+                    .apply(color: widget.courseLayout.secondaryColor),
               ),
             ),
             Text(
               DateFormat('kk:mm').format(session.end),
-              style: Theme.of(context).textTheme.caption.apply(color: widget.courseLayout.secondaryColor),
+              style: Theme.of(context)
+                  .textTheme
+                  .caption
+                  .apply(color: widget.courseLayout.secondaryColor),
             ),
           ],
         ),
@@ -74,6 +95,8 @@ class _TimetableState extends State<Timetable> {
             ? () {
                 setState(() {
                   widget.chosen[index] = !widget.chosen[index];
+                  if (widget.chosen.every((element) => !element))
+                    editMode = false;
                 });
               }
             : null,
@@ -82,12 +105,16 @@ class _TimetableState extends State<Timetable> {
             Transform(
               transform: Matrix4.identity()..translate(0.1),
               child: Container(
-                color: widget.chosen[index] ? Colors.transparent : widget.courseLayout.primaryColor,
+                color: widget.chosen[index]
+                    ? Colors.transparent
+                    : widget.courseLayout.primaryColor,
               ),
             ),
             Container(
               decoration: BoxDecoration(
-                color: widget.chosen[index] ? Colors.transparent : widget.courseLayout.primaryColor,
+                color: widget.chosen[index]
+                    ? Colors.transparent
+                    : widget.courseLayout.primaryColor,
                 border: Border(
                   left: BorderSide(
                     color: widget.courseLayout.primaryColor,
@@ -104,10 +131,10 @@ class _TimetableState extends State<Timetable> {
                     Text(
                       course.name,
                       softWrap: false,
-                      style: Theme.of(context)
-                          .textTheme
-                          .caption
-                          .apply(color: widget.chosen[index] ? widget.courseLayout.primaryColor : widget.courseLayout.secondaryColor),
+                      style: Theme.of(context).textTheme.caption.apply(
+                          color: widget.chosen[index]
+                              ? widget.courseLayout.primaryColor
+                              : widget.courseLayout.secondaryColor),
                       overflow: TextOverflow.fade,
                     ),
                     Container(
@@ -122,7 +149,10 @@ class _TimetableState extends State<Timetable> {
                         child: Text(
                           course.room,
                           softWrap: false,
-                          style: Theme.of(context).textTheme.caption.apply(color: Colors.white),
+                          style: Theme.of(context)
+                              .textTheme
+                              .caption
+                              .apply(color: Colors.white),
                           overflow: TextOverflow.fade,
                         ),
                       ),
@@ -137,7 +167,8 @@ class _TimetableState extends State<Timetable> {
     );
   }
 
-  Widget getRow(Session session, int sessionIndex, bool isLast, List<Course> courses) {
+  Widget getRow(
+      Session session, int sessionIndex, bool isLast, List<Course> courses) {
     return Padding(
       padding: EdgeInsets.fromLTRB(0, 0, 0, isLast ? 0 : 2.5),
       child: Container(
@@ -172,7 +203,10 @@ class _TimetableState extends State<Timetable> {
             gradient: LinearGradient(
               begin: Alignment(0.5, 0.99),
               end: Alignment(0.5, 1),
-              colors: [widget.courseLayout.secondaryColor, widget.courseLayout.primaryColor],
+              colors: [
+                widget.courseLayout.secondaryColor,
+                widget.courseLayout.primaryColor
+              ],
             ),
           ),
           child: ScrollConfiguration(
@@ -212,8 +246,17 @@ class _TimetableState extends State<Timetable> {
           : null,
       child: Stack(
         children: [
-          getMainBody(),
-          _WeekBar(),
+          Padding(
+            padding: EdgeInsets.fromLTRB(0, 30, 0, 0),
+            child: getMainBody(),
+          ),
+          _WeekBar(
+            courseLayout: widget.courseLayout,
+          ),
+          if (editMode)
+            _EditToolBar(
+              courseLayout: widget.courseLayout,
+            ),
         ],
       ),
     );
@@ -222,61 +265,116 @@ class _TimetableState extends State<Timetable> {
 
 class _TimetableListViewBehaviour extends ScrollBehavior {
   @override
-  Widget buildViewportChrome(BuildContext context, Widget child, AxisDirection axisDirection) {
+  Widget buildViewportChrome(
+      BuildContext context, Widget child, AxisDirection axisDirection) {
     return child;
   }
 }
 
 class _WeekBar extends StatelessWidget {
   final CourseLayout courseLayout;
-  _WeekBar({this.courseLayout = const CourseLayout.light(), Key key}) : super(key: key);
+  _WeekBar({this.courseLayout = const CourseLayout.light(), Key key})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final List<String> week = "SUN,MON,TUE,WED,THU,FRI,SAT".split(',');
-    return Container(
-      /*decoration: BoxDecoration(
-        color: courseLayout.primaryColor,
-        boxShadow: [
-          BoxShadow(
-            offset: Offset(3.0, 3.0),
-            blurRadius: 5,
-            spreadRadius: 2,
-          ),
-        ],
-      ),*/
-      child: Row(
-        mainAxisSize: MainAxisSize.max,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Container(
-            width: 40,
-          ),
-          for (String day in week)
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(2, 8, 0, 1),
-                child: Text(
-                  day,
-                  style: Theme.of(context).textTheme.subtitle2.apply(
-                        color: courseLayout.secondaryColor,
-                      ),
+    return Align(
+      alignment: Alignment.topCenter,
+      child: Container(
+        decoration: BoxDecoration(
+          color: courseLayout.primaryColor,
+          boxShadow: [
+            BoxShadow(
+              color: Color.fromARGB(150, 10, 10, 10),
+              offset: Offset(0.0, 1.0),
+              blurRadius: 3,
+              spreadRadius: 2,
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Container(
+              width: 40,
+              height: 30,
+            ),
+            for (String day in week)
+              Expanded(
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(4, 8, 0, 4),
+                  child: Text(
+                    day,
+                    style: Theme.of(context).textTheme.subtitle2.apply(
+                          color: courseLayout.secondaryColor,
+                        ),
+                  ),
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
 
 class _EditToolBar extends StatefulWidget {
+  final CourseLayout courseLayout;
+  _EditToolBar({this.courseLayout, Key key}) : super(key: key);
+
   @override
   State<StatefulWidget> createState() => _EditToolBarState();
 }
 
 class _EditToolBarState extends State<_EditToolBar> {
+  Widget getOperationButton(
+          IconData icon, String tooltip, GestureTapCallback onTap) =>
+      Tooltip(
+        message: tooltip,
+        child: FlatButton.icon(
+          icon: Icon(
+            icon,
+            color: widget.courseLayout.secondaryColor,
+          ),
+          onPressed: onTap,
+          label: Text(''),
+        ),
+      );
+
   @override
-  Widget build(BuildContext context) {}
+  Widget build(BuildContext context) {
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(
+          sigmaX: 5,
+          sigmaY: 5,
+        ),
+        child: Container(
+          height: 30,
+          decoration: BoxDecoration(
+            color: widget.courseLayout.primaryColor,
+            boxShadow: [
+              BoxShadow(
+                color: Color.fromARGB(150, 10, 10, 10),
+                offset: Offset(0.0, 1.0),
+                blurRadius: 3,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              getOperationButton(
+                  OMIcons.edit, S.of(context).mainPageDrawerAddEdit, () {}),
+              getOperationButton(
+                  Icons.content_copy, S.of(context).mainPageDrawerCopy, () {})
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
