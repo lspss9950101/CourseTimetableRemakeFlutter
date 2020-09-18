@@ -5,7 +5,7 @@ class Course {
   Color color;
   Course(this.name, {this.room, this.color});
   Course.dummy() {
-    this.name = 'dummy';
+    this.name = 'dummy123456';
     this.room = 'EE000';
     this.color = Colors.lime;
   }

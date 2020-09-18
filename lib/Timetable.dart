@@ -16,12 +16,7 @@ class Timetable extends StatefulWidget {
   final List<Session> sessions;
   final CourseLayout courseLayout;
 
-  Timetable(
-      {this.courses = const [],
-      this.sessions = const [],
-      this.courseLayout = const CourseLayout.light(),
-      Key key})
-      : super(key: key);
+  Timetable({this.courses = const [], this.sessions = const [], this.courseLayout = const CourseLayout.light(), Key key}) : super(key: key);
 
   @override
   State createState() => _TimetableState();
@@ -30,8 +25,10 @@ class Timetable extends StatefulWidget {
 class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
   bool editMode = false;
   GlobalKey _sessionKey = GlobalKey();
+  GlobalKey _courseKey = GlobalKey();
   AnimationController _animationController;
   double _sessionWidth = 40;
+  Size _courseSize = Size(40, 40);
   double _barHeight = 35;
   List<bool> chosen;
   Course copiedCourse;
@@ -61,34 +58,22 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
               session.name,
               softWrap: false,
               overflow: TextOverflow.fade,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyText2
-                  .apply(color: widget.courseLayout.secondaryColor),
+              style: Theme.of(context).textTheme.bodyText2.apply(color: widget.courseLayout.secondaryColor),
             ),
             Text(
               DateFormat('kk:mm').format(session.begin),
-              style: Theme.of(context)
-                  .textTheme
-                  .caption
-                  .apply(color: widget.courseLayout.secondaryColor),
+              style: Theme.of(context).textTheme.caption.apply(color: widget.courseLayout.secondaryColor),
             ),
             RotatedBox(
               quarterTurns: 1,
               child: Text(
                 '~',
-                style: Theme.of(context)
-                    .textTheme
-                    .caption
-                    .apply(color: widget.courseLayout.secondaryColor),
+                style: Theme.of(context).textTheme.caption.apply(color: widget.courseLayout.secondaryColor),
               ),
             ),
             Text(
               DateFormat('kk:mm').format(session.end),
-              style: Theme.of(context)
-                  .textTheme
-                  .caption
-                  .apply(color: widget.courseLayout.secondaryColor),
+              style: Theme.of(context).textTheme.caption.apply(color: widget.courseLayout.secondaryColor),
             ),
           ],
         ),
@@ -96,40 +81,37 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
     );
   }
 
-  Widget getCourseCell(Course course, int index) {
+  Widget getCourseCell(Course course, int index, {bool asConstraint = false}) {
     Widget bodyNormal = Expanded(
+      key: asConstraint ? _courseKey : null,
       child: GestureDetector(
         onLongPress: editMode
             ? null
             : () {
-          setState(() {
-            chosen[index] = true;
-            setEditMode(true);
-          });
-        },
+                setState(() {
+                  chosen[index] = true;
+                  setEditMode(true);
+                });
+              },
         onTap: editMode
             ? () {
-          setState(() {
-            chosen[index] = !chosen[index];
-            if (chosen.every((element) => !element)) setEditMode(false);
-          });
-        }
+                setState(() {
+                  chosen[index] = !chosen[index];
+                  if (chosen.every((element) => !element)) setEditMode(false);
+                });
+              }
             : null,
         child: Stack(
           children: [
             Transform(
               transform: Matrix4.identity()..translate(0.1),
               child: Container(
-                color: chosen[index]
-                    ? Colors.transparent
-                    : widget.courseLayout.primaryColor,
+                color: chosen[index] ? Colors.transparent : widget.courseLayout.primaryColor,
               ),
             ),
             Container(
               decoration: BoxDecoration(
-                color: chosen[index]
-                    ? Colors.transparent
-                    : widget.courseLayout.primaryColor,
+                color: chosen[index] ? Colors.transparent : widget.courseLayout.primaryColor,
                 border: Border(
                   left: BorderSide(
                     color: widget.courseLayout.primaryColor,
@@ -146,10 +128,10 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
                     Text(
                       course.name,
                       softWrap: false,
-                      style: Theme.of(context).textTheme.caption.apply(
-                          color: chosen[index]
-                              ? widget.courseLayout.primaryColor
-                              : widget.courseLayout.secondaryColor),
+                      style: Theme.of(context)
+                          .textTheme
+                          .caption
+                          .apply(color: chosen[index] ? widget.courseLayout.primaryColor : widget.courseLayout.secondaryColor),
                       overflow: TextOverflow.fade,
                     ),
                     Container(
@@ -164,10 +146,7 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
                         child: Text(
                           course.room,
                           softWrap: false,
-                          style: Theme.of(context)
-                              .textTheme
-                              .caption
-                              .apply(color: Colors.white),
+                          style: Theme.of(context).textTheme.caption.apply(color: Colors.white),
                           overflow: TextOverflow.fade,
                         ),
                       ),
@@ -184,34 +163,30 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
       onLongPress: editMode
           ? null
           : () {
-        setState(() {
-          chosen[index] = true;
-          setEditMode(true);
-        });
-      },
+              setState(() {
+                chosen[index] = true;
+                setEditMode(true);
+              });
+            },
       onTap: editMode
           ? () {
-        setState(() {
-          chosen[index] = !chosen[index];
-          if (chosen.every((element) => !element)) setEditMode(false);
-        });
-      }
+              setState(() {
+                chosen[index] = !chosen[index];
+                if (chosen.every((element) => !element)) setEditMode(false);
+              });
+            }
           : null,
       child: Stack(
         children: [
           Transform(
             transform: Matrix4.identity()..translate(0.1),
             child: Container(
-              color: chosen[index]
-                  ? Colors.transparent
-                  : widget.courseLayout.primaryColor,
+              color: chosen[index] ? Colors.transparent : widget.courseLayout.primaryColor,
             ),
           ),
           Container(
             decoration: BoxDecoration(
-              color: chosen[index]
-                  ? Colors.transparent
-                  : widget.courseLayout.primaryColor,
+              color: chosen[index] ? Colors.transparent : widget.courseLayout.primaryColor,
               border: Border(
                 left: BorderSide(
                   color: widget.courseLayout.primaryColor,
@@ -228,10 +203,8 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
                   Text(
                     course.name,
                     softWrap: false,
-                    style: Theme.of(context).textTheme.caption.apply(
-                        color: chosen[index]
-                            ? widget.courseLayout.primaryColor
-                            : widget.courseLayout.secondaryColor),
+                    style:
+                        Theme.of(context).textTheme.caption.apply(color: chosen[index] ? widget.courseLayout.primaryColor : widget.courseLayout.secondaryColor),
                     overflow: TextOverflow.fade,
                   ),
                   Container(
@@ -246,10 +219,7 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
                       child: Text(
                         course.room,
                         softWrap: false,
-                        style: Theme.of(context)
-                            .textTheme
-                            .caption
-                            .apply(color: Colors.white),
+                        style: Theme.of(context).textTheme.caption.apply(color: Colors.white),
                         overflow: TextOverflow.fade,
                       ),
                     ),
@@ -261,64 +231,80 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
         ],
       ),
     );
-    Widget bodyFeedback = Stack(
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            color: chosen[index]
-                ? widget.courseLayout.secondaryColor
-                : widget.courseLayout.primaryColor,
-          ),
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(4, 12, 4, 12),
-            child: Column(
-              mainAxisSize: MainAxisSize.max,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  course.name,
+    Widget bodyFeedback = Container(
+      width: _courseSize.width,
+      height: _courseSize.height,
+      decoration: BoxDecoration(
+        color: chosen[index] ? widget.courseLayout.secondaryColor : widget.courseLayout.primaryColor,
+        boxShadow: [
+          BoxShadow(
+            color: Color.fromARGB(150, 50, 50, 50),
+            blurRadius: 10,
+          )
+        ],
+      ),
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(4, 12, 4, 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              course.name,
+              softWrap: false,
+              style: Theme.of(context).textTheme.caption.apply(color: chosen[index] ? widget.courseLayout.primaryColor : widget.courseLayout.secondaryColor),
+              overflow: TextOverflow.fade,
+            ),
+            Container(
+              decoration: BoxDecoration(
+                color: course.color,
+                borderRadius: BorderRadius.all(
+                  Radius.circular(5),
+                ),
+              ),
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(5, 2, 5, 2),
+                child: Text(
+                  course.room,
                   softWrap: false,
-                  style: Theme.of(context).textTheme.caption.apply(
-                      color: chosen[index]
-                          ? widget.courseLayout.primaryColor
-                          : widget.courseLayout.secondaryColor),
+                  style: Theme.of(context).textTheme.caption.apply(color: Colors.white),
                   overflow: TextOverflow.fade,
                 ),
-                Container(
-                  decoration: BoxDecoration(
-                    color: course.color,
-                    borderRadius: BorderRadius.all(
-                      Radius.circular(5),
-                    ),
-                  ),
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(5, 2, 5, 2),
-                    child: Text(
-                      course.room,
-                      softWrap: false,
-                      style: Theme.of(context)
-                          .textTheme
-                          .caption
-                          .apply(color: Colors.white),
-                      overflow: TextOverflow.fade,
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
+          ],
         ),
-      ],
+      ),
     );
 
-    return editMode ? Expanded(child: LongPressDraggable(
-      child: body,
-      feedback: bodyFeedback,),
-    ) : bodyNormal;
+    return editMode
+        ? Expanded(
+            child: DragTarget<int>(
+              builder: (context, candidates, rejects) => LongPressDraggable(
+                child: body,
+                feedback: bodyFeedback,
+                childWhenDragging: Container(color: widget.courseLayout.primaryColor),
+                data: index,
+              ),
+              onWillAccept: (data) {
+                return true;
+              },
+              onAccept: (data) {
+                setState(() {
+                  Course course = widget.courses[data];
+                  bool chosenStatus = chosen[data];
+                  widget.courses[data] = widget.courses[index];
+                  chosen[data] = chosen[index];
+                  widget.courses[index] = course;
+                  chosen[index] = chosenStatus;
+                });
+              }
+            ),
+          )
+        : bodyNormal;
   }
 
-  Widget getRow(
-      Session session, int sessionIndex, bool isLast, List<Course> courses) {
+  Widget getRow(Session session, int sessionIndex, bool isLast, List<Course> courses) {
     return Padding(
       padding: EdgeInsets.fromLTRB(0, 0, 0, isLast ? 0 : 2.5),
       child: Container(
@@ -332,7 +318,7 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
                   int rowIndex = e.key;
                   Course course = e.value;
                   int courseIndex = sessionIndex * 7 + rowIndex;
-                  return getCourseCell(course, courseIndex);
+                  return getCourseCell(course, courseIndex, asConstraint: courseIndex == 0);
                 },
               ),
             ],
@@ -353,10 +339,7 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
             gradient: LinearGradient(
               begin: Alignment(0.5, 0.99),
               end: Alignment(0.5, 1),
-              colors: [
-                widget.courseLayout.secondaryColor,
-                widget.courseLayout.primaryColor
-              ],
+              colors: [widget.courseLayout.secondaryColor, widget.courseLayout.primaryColor],
             ),
           ),
           child: ScrollConfiguration(
@@ -408,6 +391,13 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
       setState(() {
         _sessionWidth = width;
       });
+    renderBox = _courseKey.currentContext?.findRenderObject();
+    Size size = renderBox?.size;
+    if (size != null && size != _courseSize)
+      setState(() {
+        size = Size(size.width - 4, size.height);
+        _courseSize = size;
+      });
   }
 
   @override
@@ -441,22 +431,35 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
             hasCopied: copiedCourse != null,
             callback: (EditToolType editToolType) {
               setState(() {
-              switch(editToolType) {
-                case EditToolType.ADD:
-                  break;
-                case EditToolType.COPY:
-                  int chosenCount = chosen.where((element) => element).toList().length;
-                  if(chosenCount < 1) MessageSnackBar.showSnackBar(context, "Please choose one course.", widget.courseLayout, duration: Duration(milliseconds: 750),);
-                  else if(chosenCount > 1) MessageSnackBar.showSnackBar(context, "Please choose exactly one course.", widget.courseLayout, duration: Duration(milliseconds: 750),);
-                  else copiedCourse = widget.courses[chosen.indexOf(true)];
-                  break;
-                case EditToolType.PASTE:
-                  break;
-                case EditToolType.DELETE:
-                  break;
-                case EditToolType.DELETE_ALL:
-                  break;
-              }
+                switch (editToolType) {
+                  case EditToolType.ADD:
+                    break;
+                  case EditToolType.COPY:
+                    int chosenCount = chosen.where((element) => element).toList().length;
+                    if (chosenCount < 1)
+                      MessageSnackBar.showSnackBar(
+                        context,
+                        "Please choose one course.",
+                        widget.courseLayout,
+                        duration: Duration(milliseconds: 750),
+                      );
+                    else if (chosenCount > 1)
+                      MessageSnackBar.showSnackBar(
+                        context,
+                        "Please choose exactly one course.",
+                        widget.courseLayout,
+                        duration: Duration(milliseconds: 750),
+                      );
+                    else
+                      copiedCourse = widget.courses[chosen.indexOf(true)];
+                    break;
+                  case EditToolType.PASTE:
+                    break;
+                  case EditToolType.DELETE:
+                    break;
+                  case EditToolType.DELETE_ALL:
+                    break;
+                }
               });
             },
           ),
@@ -468,8 +471,7 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
 
 class _TimetableListViewBehaviour extends ScrollBehavior {
   @override
-  Widget buildViewportChrome(
-      BuildContext context, Widget child, AxisDirection axisDirection) {
+  Widget buildViewportChrome(BuildContext context, Widget child, AxisDirection axisDirection) {
     return child;
   }
 }
@@ -478,12 +480,7 @@ class _WeekBar extends StatelessWidget {
   final CourseLayout courseLayout;
   final double blankWidth;
   final double height;
-  _WeekBar(
-      {this.courseLayout = const CourseLayout.light(),
-      this.blankWidth,
-      this.height,
-      Key key})
-      : super(key: key);
+  _WeekBar({this.courseLayout = const CourseLayout.light(), this.blankWidth, this.height, Key key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -545,15 +542,7 @@ class _EditToolBar extends StatefulWidget {
   final int chosenCount;
   final AnimationController animationController;
   final void Function(EditToolType) callback;
-  _EditToolBar(
-      {this.hasCopied,
-      this.chosenCount,
-      this.courseLayout,
-        this.callback,
-      this.height,
-      this.animationController,
-      Key key})
-      : super(key: key);
+  _EditToolBar({this.hasCopied, this.chosenCount, this.courseLayout, this.callback, this.height, this.animationController, Key key}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _EditToolBarState();
@@ -562,9 +551,7 @@ class _EditToolBar extends StatefulWidget {
 class _EditToolBarState extends State<_EditToolBar> {
   Animation _animation;
 
-  Widget getOperationButton(
-          IconData icon, String tooltip, EditToolType editToolType) =>
-      Material(
+  Widget getOperationButton(IconData icon, String tooltip, EditToolType editToolType) => Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: () {},
@@ -584,27 +571,26 @@ class _EditToolBarState extends State<_EditToolBar> {
   List<Widget> getOperationButtons() {
     List<Widget> result = [
       getOperationButton(
-          Icons.edit,
-          widget.chosenCount > 1
-              ? S.of(context).mainPageDrawerAddEdit
-              : S.of(context).mainPageDrawerAddEditSingle,
-          EditToolType.ADD,),
+        Icons.edit,
+        widget.chosenCount > 1 ? S.of(context).mainPageDrawerAddEdit : S.of(context).mainPageDrawerAddEditSingle,
+        EditToolType.ADD,
+      ),
       getOperationButton(
-          Icons.content_copy, S.of(context).mainPageDrawerCopy, EditToolType.COPY,),
+        Icons.content_copy,
+        S.of(context).mainPageDrawerCopy,
+        EditToolType.COPY,
+      ),
       getOperationButton(
-          Icons.content_paste,
-          widget.chosenCount > 1
-              ? S.of(context).mainPageDrawerPaste
-              : S.of(context).mainPageDrawerPasteSingle,
-          EditToolType.PASTE,),
+        Icons.content_paste,
+        widget.chosenCount > 1 ? S.of(context).mainPageDrawerPaste : S.of(context).mainPageDrawerPasteSingle,
+        EditToolType.PASTE,
+      ),
       getOperationButton(
-          Icons.delete,
-          widget.chosenCount > 1
-              ? S.of(context).mainPageDrawerDelete
-              : S.of(context).mainPageDrawerDeleteSingle,
-          EditToolType.DELETE,),
-      getOperationButton(
-          Icons.delete_forever, S.of(context).mainPageDrawerDeleteAll, EditToolType.DELETE_ALL),
+        Icons.delete,
+        widget.chosenCount > 1 ? S.of(context).mainPageDrawerDelete : S.of(context).mainPageDrawerDeleteSingle,
+        EditToolType.DELETE,
+      ),
+      getOperationButton(Icons.delete_forever, S.of(context).mainPageDrawerDeleteAll, EditToolType.DELETE_ALL),
     ];
 
     if (!widget.hasCopied) result.removeAt(2);
@@ -614,12 +600,10 @@ class _EditToolBarState extends State<_EditToolBar> {
   @override
   void initState() {
     super.initState();
-    _animation = Tween<double>(begin: -widget.height, end: 0)
-        .chain(CurveTween(curve: Curves.fastOutSlowIn))
-        .animate(widget.animationController)
-          ..addListener(() {
-            setState(() {});
-          });
+    _animation = Tween<double>(begin: -widget.height, end: 0).chain(CurveTween(curve: Curves.fastOutSlowIn)).animate(widget.animationController)
+      ..addListener(() {
+        setState(() {});
+      });
   }
 
   @override
