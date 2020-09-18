@@ -56,7 +56,7 @@ class _MainPageState extends State<MainPage> {
             break;
         }
       },),
-      body: Timetable(courses: courses, sessions: sessions, chosen: chosen, courseLayout: darkMode ? CourseLayout.dark() : CourseLayout.light(),),
+      body: Timetable(courses: courses, sessions: sessions, courseLayout: darkMode ? CourseLayout.dark() : CourseLayout.light(),),
     );
   }
 }

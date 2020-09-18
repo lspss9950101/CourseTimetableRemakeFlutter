@@ -15,5 +15,6 @@
   "mainPageDrawerWidgetSettings": "WIDGET SETTINGS",
   "mainPageDrawerOutputAsImage": "OUTPUT AS IMAGE",
   "mainPageDrawerSetting": "SETTINGS",
-  "mainPageDrawerSaveLoadProfile": "SAVE/LOAD PROFILE"
+  "mainPageDrawerSaveLoadProfile": "SAVE/LOAD PROFILE",
+  "weekDays": "SUN,MON,TUE,WED,THU,FRI,SAT"
 }

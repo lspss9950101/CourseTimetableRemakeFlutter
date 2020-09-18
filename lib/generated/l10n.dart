@@ -202,6 +202,16 @@ class S {
       args: [],
     );
   }
+
+  /// `SUN,MON,TUE,WED,THU,FRI,SAT`
+  String get weekDays {
+    return Intl.message(
+      'SUN,MON,TUE,WED,THU,FRI,SAT',
+      name: 'weekDays',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

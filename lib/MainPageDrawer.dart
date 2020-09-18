@@ -160,10 +160,10 @@ class _MainPageDrawerState extends State<MainPageDrawer> {
             DrawerHeader(
               child: Text(S.of(context).appTitle),
             ),
-            getConstrainedListTile(
+            /*getConstrainedListTile(
                 title: S.of(context).mainPageDrawerGeneralOperations,
                 titleStyle: Theme.of(context).textTheme.subtitle1),
-            ...getCoursesOperations([], []),
+            ...getCoursesOperations([], []),*/
             getConstrainedListTile(
               title: S.of(context).mainPageDrawerSetting,
               titleStyle: Theme.of(context).textTheme.subtitle1,

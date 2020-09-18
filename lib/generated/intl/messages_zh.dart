@@ -37,6 +37,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "mainPageDrawerSaveLoadProfile" : MessageLookupByLibrary.simpleMessage("SAVE/LOAD PROFILE"),
     "mainPageDrawerSessionSetting" : MessageLookupByLibrary.simpleMessage("時段設定"),
     "mainPageDrawerSetting" : MessageLookupByLibrary.simpleMessage("設定"),
-    "mainPageDrawerWidgetSettings" : MessageLookupByLibrary.simpleMessage("小工具設定")
+    "mainPageDrawerWidgetSettings" : MessageLookupByLibrary.simpleMessage("小工具設定"),
+    "weekDays" : MessageLookupByLibrary.simpleMessage("日,一,二,三,四,五,六")
   };
 }
