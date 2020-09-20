@@ -1,9 +1,13 @@
 import 'dart:ui';
 
+import 'package:course_timetable_remake/DBPreference.dart';
+import 'package:course_timetable_remake/Dialog.dart';
+import 'package:course_timetable_remake/Preference.dart';
 import 'package:course_timetable_remake/Resources.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:intl/intl.dart';
 
 import 'Course.dart';
@@ -15,8 +19,19 @@ class Timetable extends StatefulWidget {
   final List<Course> courses;
   final List<Session> sessions;
   final CourseLayout courseLayout;
+  final PreferenceProvider preferenceProvider;
+  final void Function() saveCourseToDB;
+  final void Function(Function()) refresh;
 
-  Timetable({this.courses = const [], this.sessions = const [], this.courseLayout = const CourseLayout.light(), Key key}) : super(key: key);
+  Timetable(
+      {this.refresh,
+      this.saveCourseToDB,
+      this.preferenceProvider,
+      this.courses = const [],
+      this.sessions = const [],
+      this.courseLayout = const CourseLayout.light(),
+      Key key})
+      : super(key: key);
 
   @override
   State createState() => _TimetableState();
@@ -32,6 +47,7 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
   double _barHeight = 35;
   List<bool> chosen;
   Course copiedCourse;
+  Map prefs = Map<PREF_TYPE, Preference>();
 
   void setEditMode(bool val) {
     if (val == editMode) return;
@@ -39,8 +55,10 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
     if (val) {
       _animationController.forward();
       HapticFeedback.vibrate();
-    } else
+    } else {
       _animationController.reverse();
+      widget.saveCourseToDB?.call();
+    }
     editMode = val;
   }
 
@@ -49,7 +67,7 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
       key: asConstraint ? _sessionKey : null,
       color: widget.courseLayout.primaryColor,
       child: Padding(
-        padding: EdgeInsets.all(4),
+        padding: EdgeInsets.symmetric(horizontal: 4, vertical: 6),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -60,10 +78,12 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
               overflow: TextOverflow.fade,
               style: Theme.of(context).textTheme.bodyText2.apply(color: widget.courseLayout.secondaryColor),
             ),
+            Container(height: 6,),
             Text(
-              DateFormat('kk:mm').format(session.begin),
+              DateFormat('HH:mm').format(session.begin),
               style: Theme.of(context).textTheme.caption.apply(color: widget.courseLayout.secondaryColor),
             ),
+            Container(height: 2,),
             RotatedBox(
               quarterTurns: 1,
               child: Text(
@@ -71,8 +91,9 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
                 style: Theme.of(context).textTheme.caption.apply(color: widget.courseLayout.secondaryColor),
               ),
             ),
+            Container(height: 2,),
             Text(
-              DateFormat('kk:mm').format(session.end),
+              DateFormat('HH:mm').format(session.end),
               style: Theme.of(context).textTheme.caption.apply(color: widget.courseLayout.secondaryColor),
             ),
           ],
@@ -82,6 +103,50 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
   }
 
   Widget getCourseCell(Course course, int index, {bool asConstraint = false}) {
+    Widget main = Padding(
+      padding: EdgeInsets.fromLTRB(4, 8, 4, 12),
+      child: Column(
+        mainAxisSize: MainAxisSize.max,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            course.name,
+            softWrap: false,
+            maxLines: 2,
+            style: Theme.of(context).textTheme.caption.apply(color: chosen[index] ? widget.courseLayout.primaryColor : widget.courseLayout.secondaryColor, fontSizeFactor: prefs[PREF_TYPE.CONFIG_NAME_SIZE].value),
+            overflow: TextOverflow.ellipsis,
+          ),
+          Row(
+            mainAxisSize: MainAxisSize.max,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (course.room.isNotEmpty)
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: course.color,
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(5),
+                      ),
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(2, 2, 2, 2),
+                      child: Text(
+                        course.room,
+                        textAlign: TextAlign.center,
+                        softWrap: false,
+                        style: Theme.of(context).textTheme.caption.apply(color: prefs[PREF_TYPE.CONFIG_ROOM_COLOR].value == COLOR_MODE.LIGHT ? Colors.white : prefs[PREF_TYPE.CONFIG_ROOM_COLOR].value == COLOR_MODE.DARK ? Colors.black : useWhiteForeground(course.color) ? Colors.white : Colors.black, fontSizeFactor: prefs[PREF_TYPE.CONFIG_ROOM_SIZE].value),
+                        overflow: TextOverflow.fade,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+
     Widget bodyNormal = Expanded(
       key: asConstraint ? _courseKey : null,
       child: GestureDetector(
@@ -104,7 +169,9 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
         child: Stack(
           children: [
             Transform(
-              transform: Matrix4.identity()..translate(0.1),
+              transform: Matrix4.identity()
+                ..translate(0.2)
+                ..scale(1.2, 1, 1),
               child: Container(
                 color: chosen[index] ? Colors.transparent : widget.courseLayout.primaryColor,
               ),
@@ -119,118 +186,57 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
                   ),
                 ),
               ),
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(4, 12, 4, 12),
-                child: Column(
-                  mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      course.name,
-                      softWrap: false,
-                      style: Theme.of(context)
-                          .textTheme
-                          .caption
-                          .apply(color: chosen[index] ? widget.courseLayout.primaryColor : widget.courseLayout.secondaryColor),
-                      overflow: TextOverflow.fade,
-                    ),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: course.color,
-                        borderRadius: BorderRadius.all(
-                          Radius.circular(5),
-                        ),
-                      ),
-                      child: Padding(
-                        padding: EdgeInsets.fromLTRB(5, 2, 5, 2),
-                        child: Text(
-                          course.room,
-                          softWrap: false,
-                          style: Theme.of(context).textTheme.caption.apply(color: Colors.white),
-                          overflow: TextOverflow.fade,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              child: main,
             ),
           ],
         ),
       ),
     );
-    Widget body = GestureDetector(
-      onLongPress: editMode
-          ? null
-          : () {
-              setState(() {
-                chosen[index] = true;
-                setEditMode(true);
-              });
-            },
-      onTap: editMode
-          ? () {
-              setState(() {
-                chosen[index] = !chosen[index];
-                if (chosen.every((element) => !element)) setEditMode(false);
-              });
-            }
-          : null,
-      child: Stack(
-        children: [
-          Transform(
-            transform: Matrix4.identity()..translate(0.1),
-            child: Container(
-              color: chosen[index] ? Colors.transparent : widget.courseLayout.primaryColor,
-            ),
-          ),
-          Container(
-            decoration: BoxDecoration(
-              color: chosen[index] ? Colors.transparent : widget.courseLayout.primaryColor,
-              border: Border(
-                left: BorderSide(
-                  color: widget.courseLayout.primaryColor,
-                  width: 4,
+
+    Widget Function(bool) body = (highlight) => GestureDetector(
+          onLongPress: editMode
+              ? null
+              : () {
+                  setState(() {
+                    chosen[index] = true;
+                    setEditMode(true);
+                  });
+                },
+          onTap: editMode
+              ? () {
+                  setState(() {
+                    chosen[index] = !chosen[index];
+                    if (chosen.every((element) => !element)) setEditMode(false);
+                  });
+                }
+              : null,
+          child: Stack(
+            children: [
+              Transform(
+                transform: Matrix4.identity()..translate(0.2),
+                child: Container(
+                  color: chosen[index] ? Colors.transparent : widget.courseLayout.primaryColor,
                 ),
               ),
-            ),
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(4, 12, 4, 12),
-              child: Column(
-                mainAxisSize: MainAxisSize.max,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    course.name,
-                    softWrap: false,
-                    style:
-                        Theme.of(context).textTheme.caption.apply(color: chosen[index] ? widget.courseLayout.primaryColor : widget.courseLayout.secondaryColor),
-                    overflow: TextOverflow.fade,
-                  ),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: course.color,
-                      borderRadius: BorderRadius.all(
-                        Radius.circular(5),
-                      ),
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(5, 2, 5, 2),
-                      child: Text(
-                        course.room,
-                        softWrap: false,
-                        style: Theme.of(context).textTheme.caption.apply(color: Colors.white),
-                        overflow: TextOverflow.fade,
-                      ),
+              Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: highlight
+                      ? Color.lerp(widget.courseLayout.primaryColor, widget.courseLayout.secondaryColor, 0.5)
+                      : chosen[index] ? Colors.transparent : widget.courseLayout.primaryColor,
+                  border: Border(
+                    left: BorderSide(
+                      color: widget.courseLayout.primaryColor,
+                      width: 4,
                     ),
                   ),
-                ],
+                ),
+                child: main,
               ),
-            ),
+            ],
           ),
-        ],
-      ),
-    );
+        );
+
     Widget bodyFeedback = Container(
       width: _courseSize.width,
       height: _courseSize.height,
@@ -238,68 +244,42 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
         color: chosen[index] ? widget.courseLayout.secondaryColor : widget.courseLayout.primaryColor,
         boxShadow: [
           BoxShadow(
-            color: Color.fromARGB(150, 50, 50, 50),
-            blurRadius: 10,
+            color: Color.fromARGB(150, 0, 0, 0),
+            spreadRadius: 5,
+            blurRadius: 5,
           )
         ],
       ),
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(4, 12, 4, 12),
-        child: Column(
-          mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              course.name,
-              softWrap: false,
-              style: Theme.of(context).textTheme.caption.apply(color: chosen[index] ? widget.courseLayout.primaryColor : widget.courseLayout.secondaryColor),
-              overflow: TextOverflow.fade,
-            ),
-            Container(
-              decoration: BoxDecoration(
-                color: course.color,
-                borderRadius: BorderRadius.all(
-                  Radius.circular(5),
-                ),
-              ),
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(5, 2, 5, 2),
-                child: Text(
-                  course.room,
-                  softWrap: false,
-                  style: Theme.of(context).textTheme.caption.apply(color: Colors.white),
-                  overflow: TextOverflow.fade,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+      child: main,
     );
 
     return editMode
         ? Expanded(
             child: DragTarget<int>(
-              builder: (context, candidates, rejects) => LongPressDraggable(
-                child: body,
-                feedback: bodyFeedback,
-                childWhenDragging: Container(color: widget.courseLayout.primaryColor),
-                data: index,
-              ),
-              onWillAccept: (data) {
-                return true;
-              },
-              onAccept: (data) {
-                setState(() {
-                  Course course = widget.courses[data];
-                  bool chosenStatus = chosen[data];
-                  widget.courses[data] = widget.courses[index];
-                  chosen[data] = chosen[index];
-                  widget.courses[index] = course;
-                  chosen[index] = chosenStatus;
-                });
-              }
-            ),
+                builder: (context, candidates, rejects) => LongPressDraggable(
+                      child: body(candidates.length > 0),
+                      feedback: bodyFeedback,
+                      childWhenDragging: Transform(
+                        transform: Matrix4.identity()
+                          ..scale(1.05, 1, 1)
+                          ..translate(-0.1),
+                        child: Container(color: widget.courseLayout.primaryColor),
+                      ),
+                      data: index,
+                    ),
+                onWillAccept: (data) {
+                  return true;
+                },
+                onAccept: (data) {
+                  setState(() {
+                    Course course = widget.courses[data];
+                    bool chosenStatus = chosen[data];
+                    widget.courses[data] = widget.courses[index];
+                    chosen[data] = chosen[index];
+                    widget.courses[index] = course;
+                    chosen[index] = chosenStatus;
+                  });
+                }),
           )
         : bodyNormal;
   }
@@ -365,26 +345,7 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
     );
   }
 
-  @override
-  void initState() {
-    super.initState();
-    chosen = List.filled(widget.courses.length, false);
-    _animationController = AnimationController(
-      vsync: this,
-      duration: Duration(milliseconds: 500),
-      reverseDuration: Duration(milliseconds: 400),
-    );
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    _animationController.dispose();
-  }
-
-  @override
-  void didUpdateWidget(Timetable oldWidget) {
-    super.didUpdateWidget(oldWidget);
+  void updateWidgetSize() {
     RenderBox renderBox = _sessionKey.currentContext?.findRenderObject();
     double width = renderBox?.size?.width;
     if (width != null && _sessionWidth != width)
@@ -401,7 +362,48 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
   }
 
   @override
+  void initState() {
+    super.initState();
+    chosen = List();
+    chosen.addAll(List.filled(widget.sessions.length * 7, false));
+    _animationController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 500),
+      reverseDuration: Duration(milliseconds: 400),
+    );
+    updateWidgetSize();
+    widget.refresh(() {
+      setState(() {
+        fetchDB();
+      });
+    });
+    PREF_TYPE.values.forEach((element) {
+      prefs[element] = Preference(element);
+    });
+  }
+
+  void fetchDB() async {
+    prefs = await widget.preferenceProvider?.getPreferences();
+    setState(() {});
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _animationController.dispose();
+  }
+
+  @override
+  void didUpdateWidget(Timetable oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    updateWidgetSize();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    while (chosen.length < widget.sessions.length * 7) chosen.add(false);
+    while (chosen.length > widget.sessions.length * 7) chosen.removeLast();
+    updateWidgetSize();
     return WillPopScope(
       onWillPop: editMode
           ? () async {
@@ -422,6 +424,7 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
             courseLayout: widget.courseLayout,
             blankWidth: _sessionWidth,
             height: _barHeight,
+            dayOfWeekSize: prefs[PREF_TYPE.CONFIG_WEEK_SIZE].value,
           ),
           _EditToolBar(
             animationController: _animationController,
@@ -429,38 +432,134 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
             height: _barHeight,
             chosenCount: chosen.where((element) => element).toList().length,
             hasCopied: copiedCourse != null,
-            callback: (EditToolType editToolType) {
-              setState(() {
-                switch (editToolType) {
-                  case EditToolType.ADD:
-                    break;
-                  case EditToolType.COPY:
-                    int chosenCount = chosen.where((element) => element).toList().length;
-                    if (chosenCount < 1)
-                      MessageSnackBar.showSnackBar(
-                        context,
-                        "Please choose one course.",
-                        widget.courseLayout,
-                        duration: Duration(milliseconds: 750),
-                      );
-                    else if (chosenCount > 1)
-                      MessageSnackBar.showSnackBar(
-                        context,
-                        "Please choose exactly one course.",
-                        widget.courseLayout,
-                        duration: Duration(milliseconds: 750),
-                      );
-                    else
-                      copiedCourse = widget.courses[chosen.indexOf(true)];
-                    break;
-                  case EditToolType.PASTE:
-                    break;
-                  case EditToolType.DELETE:
-                    break;
-                  case EditToolType.DELETE_ALL:
-                    break;
-                }
-              });
+            callback: (EditToolType editToolType) async {
+              switch (editToolType) {
+                case EditToolType.ADD:
+                  int chosenCount = chosen.where((element) => element).toList().length;
+                  if (chosenCount < 1)
+                    MessageSnackBar.showSnackBar(
+                      context,
+                      "Please choose at least one course.",
+                      widget.courseLayout,
+                      duration: Duration(milliseconds: 750),
+                    );
+                  else {
+                    List<int> chosenIndex = chosen.asMap().entries.where((element) => element.value).map((e) => e.key).toList();
+                    Course defaultCourse = chosenIndex.map((e) => widget.courses[e]).fold(Course.nullValue(), (value, element) {
+                      if (value.name == null)
+                        value.name = element.name;
+                      else if (value.name != element.name) value.name = '';
+                      if (value.room == null)
+                        value.room = element.room;
+                      else if (value.room != element.room) value.room = '';
+                      if (value.color == null)
+                        value.color = element.color;
+                      else if (value.color.value != element.color.value) value.color = Colors.pink.shade700;
+                      if (value.color == null) value.color = Colors.pink.shade700;
+                      return value;
+                    });
+
+                    if (defaultCourse == null) defaultCourse = Course.dummy();
+                    Course course = await TimetableDialog.showAddEditCourseDialog(context, widget.courseLayout, defaultCourse);
+                    if (course == null) return;
+                    if (course.room.isEmpty) course.color = Colors.pink.shade700;
+                    chosen.asMap().entries.forEach((element) {
+                      int index = element.key;
+                      bool val = element.value;
+                      if (val) widget.courses[index] = course;
+                    });
+                    chosen.setAll(
+                      0,
+                      List.filled(
+                        chosen.length,
+                        false,
+                      ),
+                    );
+                  }
+                  break;
+                case EditToolType.COPY:
+                  int chosenCount = chosen.where((element) => element).toList().length;
+                  if (chosenCount < 1)
+                    MessageSnackBar.showSnackBar(
+                      context,
+                      "Please choose at least one course.",
+                      widget.courseLayout,
+                      duration: Duration(milliseconds: 750),
+                    );
+                  else if (chosenCount > 1)
+                    MessageSnackBar.showSnackBar(
+                      context,
+                      "Please choose exactly one course.",
+                      widget.courseLayout,
+                      duration: Duration(milliseconds: 750),
+                    );
+                  else {
+                    copiedCourse = widget.courses[chosen.indexOf(true)];
+                    chosen.setAll(
+                      0,
+                      List.filled(
+                        chosen.length,
+                        false,
+                      ),
+                    );
+                  }
+                  break;
+                case EditToolType.PASTE:
+                  int chosenCount = chosen.where((element) => element).toList().length;
+                  if (chosenCount <= 0)
+                    MessageSnackBar.showSnackBar(context, 'Please choose at least one course.', widget.courseLayout);
+                  else {
+                    chosen.asMap().entries.forEach((element) {
+                      int index = element.key;
+                      bool val = element.value;
+                      if (val) widget.courses[index] = copiedCourse;
+                    });
+                    chosen.setAll(
+                      0,
+                      List.filled(
+                        chosen.length,
+                        false,
+                      ),
+                    );
+                  }
+                  break;
+                case EditToolType.DELETE:
+                  int chosenCount = chosen.where((element) => element).toList().length;
+                  if (chosenCount <= 0)
+                    MessageSnackBar.showSnackBar(context, 'Please choose at least one course.', widget.courseLayout);
+                  else {
+                    chosen.asMap().entries.forEach((element) {
+                      int index = element.key;
+                      bool val = element.value;
+                      if (val) widget.courses[index] = Course.empty();
+                    });
+                    chosen.setAll(
+                      0,
+                      List.filled(
+                        chosen.length,
+                        false,
+                      ),
+                    );
+                  }
+                  break;
+                case EditToolType.DELETE_ALL:
+                  widget.courses.setAll(
+                    0,
+                    List.filled(
+                      widget.courses.length,
+                      Course.empty(),
+                    ),
+                  );
+                  chosen.setAll(
+                    0,
+                    List.filled(
+                      chosen.length,
+                      false,
+                    ),
+                  );
+                  break;
+              }
+              setState(() {});
             },
           ),
         ],
@@ -480,7 +579,8 @@ class _WeekBar extends StatelessWidget {
   final CourseLayout courseLayout;
   final double blankWidth;
   final double height;
-  _WeekBar({this.courseLayout = const CourseLayout.light(), this.blankWidth, this.height, Key key}) : super(key: key);
+  final double dayOfWeekSize;
+  _WeekBar({this.dayOfWeekSize, this.courseLayout = const CourseLayout.light(), this.blankWidth, this.height, Key key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -516,6 +616,7 @@ class _WeekBar extends StatelessWidget {
                     day,
                     style: Theme.of(context).textTheme.caption.apply(
                           color: courseLayout.secondaryColor,
+                          fontSizeFactor: dayOfWeekSize,
                         ),
                   ),
                 ),

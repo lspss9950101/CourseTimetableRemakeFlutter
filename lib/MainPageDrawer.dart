@@ -1,5 +1,8 @@
+import 'package:course_timetable_remake/DBPreference.dart';
+import 'package:course_timetable_remake/Dialog.dart';
 import 'package:course_timetable_remake/Resources.dart';
 import 'package:flutter/material.dart';
+import 'Preference.dart';
 import 'generated/l10n.dart';
 import 'package:outline_material_icons/outline_material_icons.dart';
 
@@ -7,8 +10,9 @@ class MainPageDrawer extends StatefulWidget {
   final void Function(MainPageCallBackMSG msg, dynamic arg) callback;
   final bool darkMode;
   final CourseLayout courseLayout;
+  final PreferenceProvider preferenceProvider;
 
-  MainPageDrawer({Key key, this.callback, this.darkMode, this.courseLayout=const CourseLayout.light()}) : super(key: key);
+  MainPageDrawer({Key key, this.preferenceProvider, this.callback, this.darkMode, this.courseLayout=const CourseLayout.light()}) : super(key: key);
 
   @override
   State createState() => _MainPageDrawerState();
@@ -41,54 +45,6 @@ class _MainPageDrawerState extends State<MainPageDrawer> {
         ),
       );
 
-  List<Widget> getCoursesOperations(List copiedCourses, List selectedSession) {
-    List result = List<Widget>()
-      ..add(
-        getConstrainedListTile(
-          title: selectedSession.length > 1
-              ? S.of(context).mainPageDrawerAddEdit
-              : S.of(context).mainPageDrawerAddEditSingle,
-          titleStyle: Theme.of(context).textTheme.subtitle2,
-          icon: OMIcons.edit,
-        ),
-      )
-      ..add(
-        getConstrainedListTile(
-          title: S.of(context).mainPageDrawerCopy,
-          titleStyle: Theme.of(context).textTheme.subtitle2,
-          icon: Icons.content_copy,
-        ),
-      )
-      ..add(
-        getConstrainedListTile(
-          title: selectedSession.length > 1
-              ? S.of(context).mainPageDrawerPaste
-              : S.of(context).mainPageDrawerPasteSingle,
-          titleStyle: Theme.of(context).textTheme.subtitle2,
-          icon: Icons.content_paste,
-        ),
-      )
-      ..add(
-        getConstrainedListTile(
-          title: selectedSession.length > 1
-              ? S.of(context).mainPageDrawerDelete
-              : S.of(context).mainPageDrawerDeleteSingle,
-          titleStyle: Theme.of(context).textTheme.subtitle2,
-          icon: OMIcons.delete,
-        ),
-      )
-      ..add(
-        getConstrainedListTile(
-          title: S.of(context).mainPageDrawerDeleteAll,
-          titleStyle: Theme.of(context).textTheme.subtitle2,
-          icon: OMIcons.deleteForever,
-        ),
-      );
-    if (copiedCourses.length <= 0) result.removeAt(2);
-
-    return result;
-  }
-
   List<Widget> getSettings() {
     List result = List<Widget>()
       ..add(
@@ -120,6 +76,10 @@ class _MainPageDrawerState extends State<MainPageDrawer> {
           title: S.of(context).mainPageDrawerGeneralSettings,
           titleStyle: Theme.of(context).textTheme.subtitle2,
           icon: Icons.settings,
+          onTap: () {
+            Navigator.pop(context);
+            TimetableDialog.showContextSettingDialog(context, widget.preferenceProvider, widget.courseLayout);
+          },
         ),
       )
       ..add(
@@ -127,6 +87,10 @@ class _MainPageDrawerState extends State<MainPageDrawer> {
           title: S.of(context).mainPageDrawerWidgetSettings,
           titleStyle: Theme.of(context).textTheme.subtitle2,
           icon: OMIcons.settingsApplications,
+          onTap: () {
+            Navigator.pop(context);
+            TimetableDialog.showWidgetSettingDialog(context, widget.preferenceProvider, widget.courseLayout);
+          }
         ),
       )
       ..add(
@@ -160,10 +124,6 @@ class _MainPageDrawerState extends State<MainPageDrawer> {
             DrawerHeader(
               child: Text(S.of(context).appTitle),
             ),
-            /*getConstrainedListTile(
-                title: S.of(context).mainPageDrawerGeneralOperations,
-                titleStyle: Theme.of(context).textTheme.subtitle1),
-            ...getCoursesOperations([], []),*/
             getConstrainedListTile(
               title: S.of(context).mainPageDrawerSetting,
               titleStyle: Theme.of(context).textTheme.subtitle1,

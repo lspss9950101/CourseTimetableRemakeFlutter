@@ -34,7 +34,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "mainPageDrawerOutputAsImage" : MessageLookupByLibrary.simpleMessage("輸出成圖片"),
     "mainPageDrawerPaste" : MessageLookupByLibrary.simpleMessage("貼上課程"),
     "mainPageDrawerPasteSingle" : MessageLookupByLibrary.simpleMessage("貼上課程"),
-    "mainPageDrawerSaveLoadProfile" : MessageLookupByLibrary.simpleMessage("SAVE/LOAD PROFILE"),
+    "mainPageDrawerSaveLoadProfile" : MessageLookupByLibrary.simpleMessage("儲存/讀取"),
     "mainPageDrawerSessionSetting" : MessageLookupByLibrary.simpleMessage("時段設定"),
     "mainPageDrawerSetting" : MessageLookupByLibrary.simpleMessage("設定"),
     "mainPageDrawerWidgetSettings" : MessageLookupByLibrary.simpleMessage("小工具設定"),
