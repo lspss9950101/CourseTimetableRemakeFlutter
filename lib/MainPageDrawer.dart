@@ -78,7 +78,7 @@ class _MainPageDrawerState extends State<MainPageDrawer> {
           icon: Icons.settings,
           onTap: () {
             Navigator.pop(context);
-            TimetableDialog.showContextSettingDialog(context, widget.preferenceProvider, widget.courseLayout);
+            TimetableDialog.showContextSettingDialog(context, widget.preferenceProvider, widget.callback, widget.courseLayout);
           },
         ),
       )

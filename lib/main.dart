@@ -1,3 +1,4 @@
+import 'package:course_timetable_remake/Dialog.dart';
 import 'package:course_timetable_remake/Preference.dart';
 
 import 'Course.dart';
@@ -47,7 +48,7 @@ class MainPage extends StatefulWidget {
   State createState() => _MainPageState();
 }
 
-class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
+class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
   CourseProvider _courseProvider;
   PreferenceProvider _preferenceProvider;
   String dbCoursePath = 'course.db';
@@ -55,7 +56,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
   bool darkMode = false;
   List<Session> sessions = List();
   List<Course> courses = List();
-  void Function() refreshTimetable;
+  void Function({double nameSize, double roomSize, double dayOfWeekSize, COLOR_MODE roomColor}) refreshTimetable;
 
   @override
   void initState() {
@@ -72,18 +73,24 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
 
     refreshTimetable();
 
-    darkMode = (await _preferenceProvider.getPreference(PREF_TYPE.DARK_MODE)).value;
-    List sessionName = (await _preferenceProvider.getPreference(PREF_TYPE.SESSION_NAME)).value;
-    List sessionTime = (await _preferenceProvider.getPreference(PREF_TYPE.SESSION_TIME)).value;
-    sessions = sessionName.asMap().entries.map((e) => Session.fromDateTimeRange(e.value, sessionTime[e.key])).toList();
+    darkMode =
+        (await _preferenceProvider.getPreference(PREF_TYPE.DARK_MODE)).value;
+    List sessionName =
+        (await _preferenceProvider.getPreference(PREF_TYPE.SESSION_NAME)).value;
+    List sessionTime =
+        (await _preferenceProvider.getPreference(PREF_TYPE.SESSION_TIME)).value;
+    sessions = sessionName
+        .asMap()
+        .entries
+        .map((e) => Session.fromDateTimeRange(e.value, sessionTime[e.key]))
+        .toList();
 
     reloadCourse();
   }
 
   Future reloadCourse() async {
     courses = await _courseProvider.getCourses();
-    setState(() {
-    });
+    setState(() {});
   }
 
   @override
@@ -92,7 +99,6 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
     _courseProvider.close();
     super.dispose();
   }
-
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
@@ -113,8 +119,12 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
               setState(() {
                 darkMode = arg;
               });
-              await _preferenceProvider.setPreference(Preference.raw(PREF_TYPE.DARK_MODE, arg));
-          break;
+              await _preferenceProvider
+                  .setPreference(Preference.raw(PREF_TYPE.DARK_MODE, arg));
+              break;
+            case MainPageCallBackMSG.SET_CONFIG_APPEARANCE:
+              refreshTimetable(nameSize: arg['nameSize'], roomSize: arg['roomSize'], dayOfWeekSize: arg['dayOfWeekSize'], roomColor: arg['roomColor'],);
+              break;
           }
         },
       ),
@@ -129,7 +139,6 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver{
         },
         refresh: (refresh) {
           refreshTimetable = refresh;
-          _preferenceProvider.refreshTimetable = refresh;
         },
       ),
     );

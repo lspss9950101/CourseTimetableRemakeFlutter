@@ -43,65 +43,13 @@ enum PREF_TYPE {
   SESSION_TIME,
 }
 
-String getPrefName(PREF_TYPE type) {
-  switch(type) {
-    case PREF_TYPE.DARK_MODE:
-      return PREF_DARK_MODE;
-      break;
-    case PREF_TYPE.CONFIG_WEEK_SIZE:
-      return PREF_CONFIG_WEEK_SIZE;
-      break;
-    case PREF_TYPE.CONFIG_NAME_SIZE:
-      return PREF_CONFIG_NAME_SIZE;
-      break;
-    case PREF_TYPE.CONFIG_ROOM_SIZE:
-      return PREF_CONFIG_ROOM_SIZE;
-      break;
-    case PREF_TYPE.WIDGET_WEEK_SIZE:
-      return PREF_WIDGET_WEEK_SIZE;
-      break;
-    case PREF_TYPE.WIDGET_WEEK_COLOR:
-      return PREF_WIDGET_WEEK_COLOR;
-      break;
-    case PREF_TYPE.WIDGET_WEEK_BACKGROUND:
-      return PREF_WIDGET_WEEK_BACKGROUND;
-      break;
-    case PREF_TYPE.WIDGET_NAME_SIZE:
-      return PREF_WIDGET_NAME_SIZE;
-      break;
-    case PREF_TYPE.WIDGET_ROOM_SIZE:
-      return PREF_WIDGET_ROOM_SIZE;
-      break;
-    case PREF_TYPE.WIDGET_CONTEXT_COLOR:
-      return PREF_WIDGET_CONTEXT_COLOR;
-      break;
-    case PREF_TYPE.WIDGET_CONTEXT_BACKGROUND:
-      return PREF_WIDGET_CONTEXT_BACKGROUND;
-      break;
-    case PREF_TYPE.SYNC_ENABLED:
-      return PREF_SYNC_ENABLED;
-      break;
-    case PREF_TYPE.SYNC_SESSION:
-      return PREF_SYNC_SESSION;
-      break;
-    case PREF_TYPE.SYNC_EVENT_ID:
-      return PREF_SYNC_EVENT_ID;
-      break;
-    case PREF_TYPE.SYNC_CALENDAR_ID:
-      return PREF_SYNC_CALENDAR_ID;
-      break;
-    case PREF_TYPE.SESSION_NAME:
-      return PREF_SESSION_NAME;
-      break;
-    case PREF_TYPE.SESSION_TIME:
-      return PREF_SESSION_TIME;
-      break;
-    case PREF_TYPE.CONFIG_ROOM_COLOR:
-      return PREF_CONFIG_ROOM_COLOR;
-      break;
-  }
-  return null;
+enum _PREF_TYPE_ATTR {
+  DEFAULT_VALUE,
+  PARSE_FUNCTION,
+  TO_STRING_FUNCTION,
 }
+
+static const Map<Map<_PREF_TYPE_ATTR, Object>> _PREF_DEFINITIONS = {};
 
 String getPrefDefault(PREF_TYPE type) {
   switch(type) {
@@ -243,6 +191,12 @@ dynamic castPreference(PREF_TYPE type, String data) {
   }
 }
 
+/*extension PrefExtension on PREF_TYPE {
+  String toString() {
+    _PREF_DEFINITION[this][_PREF_TYPE_ATTR.TO_STRING_FUNCTION];
+  }
+}*/
+
 class Preference {
   String name;
   dynamic value;
@@ -292,4 +246,65 @@ class Preference {
     String valueString = valueToString();
     return 'Preference(name: $name, value: $valueString)';
   }
+
+  static String getPrefName(PREF_TYPE type) {
+    switch(type) {
+      case PREF_TYPE.DARK_MODE:
+        return PREF_DARK_MODE;
+        break;
+      case PREF_TYPE.CONFIG_WEEK_SIZE:
+        return PREF_CONFIG_WEEK_SIZE;
+        break;
+      case PREF_TYPE.CONFIG_NAME_SIZE:
+        return PREF_CONFIG_NAME_SIZE;
+        break;
+      case PREF_TYPE.CONFIG_ROOM_SIZE:
+        return PREF_CONFIG_ROOM_SIZE;
+        break;
+      case PREF_TYPE.WIDGET_WEEK_SIZE:
+        return PREF_WIDGET_WEEK_SIZE;
+        break;
+      case PREF_TYPE.WIDGET_WEEK_COLOR:
+        return PREF_WIDGET_WEEK_COLOR;
+        break;
+      case PREF_TYPE.WIDGET_WEEK_BACKGROUND:
+        return PREF_WIDGET_WEEK_BACKGROUND;
+        break;
+      case PREF_TYPE.WIDGET_NAME_SIZE:
+        return PREF_WIDGET_NAME_SIZE;
+        break;
+      case PREF_TYPE.WIDGET_ROOM_SIZE:
+        return PREF_WIDGET_ROOM_SIZE;
+        break;
+      case PREF_TYPE.WIDGET_CONTEXT_COLOR:
+        return PREF_WIDGET_CONTEXT_COLOR;
+        break;
+      case PREF_TYPE.WIDGET_CONTEXT_BACKGROUND:
+        return PREF_WIDGET_CONTEXT_BACKGROUND;
+        break;
+      case PREF_TYPE.SYNC_ENABLED:
+        return PREF_SYNC_ENABLED;
+        break;
+      case PREF_TYPE.SYNC_SESSION:
+        return PREF_SYNC_SESSION;
+        break;
+      case PREF_TYPE.SYNC_EVENT_ID:
+        return PREF_SYNC_EVENT_ID;
+        break;
+      case PREF_TYPE.SYNC_CALENDAR_ID:
+        return PREF_SYNC_CALENDAR_ID;
+        break;
+      case PREF_TYPE.SESSION_NAME:
+        return PREF_SESSION_NAME;
+        break;
+      case PREF_TYPE.SESSION_TIME:
+        return PREF_SESSION_TIME;
+        break;
+      case PREF_TYPE.CONFIG_ROOM_COLOR:
+        return PREF_CONFIG_ROOM_COLOR;
+        break;
+    }
+    return null;
+  }
+
 }

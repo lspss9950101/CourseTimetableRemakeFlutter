@@ -76,25 +76,43 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
               session.name,
               softWrap: false,
               overflow: TextOverflow.fade,
-              style: Theme.of(context).textTheme.bodyText2.apply(color: widget.courseLayout.secondaryColor),
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyText2
+                  .apply(color: widget.courseLayout.secondaryColor),
             ),
-            Container(height: 6,),
+            Container(
+              height: 6,
+            ),
             Text(
               DateFormat('HH:mm').format(session.begin),
-              style: Theme.of(context).textTheme.caption.apply(color: widget.courseLayout.secondaryColor),
+              style: Theme.of(context)
+                  .textTheme
+                  .caption
+                  .apply(color: widget.courseLayout.secondaryColor),
             ),
-            Container(height: 2,),
+            Container(
+              height: 2,
+            ),
             RotatedBox(
               quarterTurns: 1,
               child: Text(
                 '~',
-                style: Theme.of(context).textTheme.caption.apply(color: widget.courseLayout.secondaryColor),
+                style: Theme.of(context)
+                    .textTheme
+                    .caption
+                    .apply(color: widget.courseLayout.secondaryColor),
               ),
             ),
-            Container(height: 2,),
+            Container(
+              height: 2,
+            ),
             Text(
               DateFormat('HH:mm').format(session.end),
-              style: Theme.of(context).textTheme.caption.apply(color: widget.courseLayout.secondaryColor),
+              style: Theme.of(context)
+                  .textTheme
+                  .caption
+                  .apply(color: widget.courseLayout.secondaryColor),
             ),
           ],
         ),
@@ -113,7 +131,11 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
             course.name,
             softWrap: false,
             maxLines: 2,
-            style: Theme.of(context).textTheme.caption.apply(color: chosen[index] ? widget.courseLayout.primaryColor : widget.courseLayout.secondaryColor, fontSizeFactor: prefs[PREF_TYPE.CONFIG_NAME_SIZE].value),
+            style: Theme.of(context).textTheme.caption.apply(
+                color: chosen[index]
+                    ? widget.courseLayout.primaryColor
+                    : widget.courseLayout.secondaryColor,
+                fontSizeFactor: prefs[PREF_TYPE.CONFIG_NAME_SIZE].value),
             overflow: TextOverflow.ellipsis,
           ),
           Row(
@@ -135,7 +157,18 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
                         course.room,
                         textAlign: TextAlign.center,
                         softWrap: false,
-                        style: Theme.of(context).textTheme.caption.apply(color: prefs[PREF_TYPE.CONFIG_ROOM_COLOR].value == COLOR_MODE.LIGHT ? Colors.white : prefs[PREF_TYPE.CONFIG_ROOM_COLOR].value == COLOR_MODE.DARK ? Colors.black : useWhiteForeground(course.color) ? Colors.white : Colors.black, fontSizeFactor: prefs[PREF_TYPE.CONFIG_ROOM_SIZE].value),
+                        style: Theme.of(context).textTheme.caption.apply(
+                            color: prefs[PREF_TYPE.CONFIG_ROOM_COLOR].value ==
+                                    COLOR_MODE.LIGHT
+                                ? Colors.white
+                                : prefs[PREF_TYPE.CONFIG_ROOM_COLOR].value ==
+                                        COLOR_MODE.DARK
+                                    ? Colors.black
+                                    : useWhiteForeground(course.color)
+                                        ? Colors.white
+                                        : Colors.black,
+                            fontSizeFactor:
+                                prefs[PREF_TYPE.CONFIG_ROOM_SIZE].value),
                         overflow: TextOverflow.fade,
                       ),
                     ),
@@ -173,12 +206,16 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
                 ..translate(0.2)
                 ..scale(1.2, 1, 1),
               child: Container(
-                color: chosen[index] ? Colors.transparent : widget.courseLayout.primaryColor,
+                color: chosen[index]
+                    ? Colors.transparent
+                    : widget.courseLayout.primaryColor,
               ),
             ),
             Container(
               decoration: BoxDecoration(
-                color: chosen[index] ? Colors.transparent : widget.courseLayout.primaryColor,
+                color: chosen[index]
+                    ? Colors.transparent
+                    : widget.courseLayout.primaryColor,
                 border: Border(
                   left: BorderSide(
                     color: widget.courseLayout.primaryColor,
@@ -215,15 +252,20 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
               Transform(
                 transform: Matrix4.identity()..translate(0.2),
                 child: Container(
-                  color: chosen[index] ? Colors.transparent : widget.courseLayout.primaryColor,
+                  color: chosen[index]
+                      ? Colors.transparent
+                      : widget.courseLayout.primaryColor,
                 ),
               ),
               Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
                   color: highlight
-                      ? Color.lerp(widget.courseLayout.primaryColor, widget.courseLayout.secondaryColor, 0.5)
-                      : chosen[index] ? Colors.transparent : widget.courseLayout.primaryColor,
+                      ? Color.lerp(widget.courseLayout.primaryColor,
+                          widget.courseLayout.secondaryColor, 0.5)
+                      : chosen[index]
+                          ? Colors.transparent
+                          : widget.courseLayout.primaryColor,
                   border: Border(
                     left: BorderSide(
                       color: widget.courseLayout.primaryColor,
@@ -241,7 +283,9 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
       width: _courseSize.width,
       height: _courseSize.height,
       decoration: BoxDecoration(
-        color: chosen[index] ? widget.courseLayout.secondaryColor : widget.courseLayout.primaryColor,
+        color: chosen[index]
+            ? widget.courseLayout.secondaryColor
+            : widget.courseLayout.primaryColor,
         boxShadow: [
           BoxShadow(
             color: Color.fromARGB(150, 0, 0, 0),
@@ -263,7 +307,8 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
                         transform: Matrix4.identity()
                           ..scale(1.05, 1, 1)
                           ..translate(-0.1),
-                        child: Container(color: widget.courseLayout.primaryColor),
+                        child:
+                            Container(color: widget.courseLayout.primaryColor),
                       ),
                       data: index,
                     ),
@@ -284,7 +329,8 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
         : bodyNormal;
   }
 
-  Widget getRow(Session session, int sessionIndex, bool isLast, List<Course> courses) {
+  Widget getRow(
+      Session session, int sessionIndex, bool isLast, List<Course> courses) {
     return Padding(
       padding: EdgeInsets.fromLTRB(0, 0, 0, isLast ? 0 : 2.5),
       child: Container(
@@ -298,7 +344,8 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
                   int rowIndex = e.key;
                   Course course = e.value;
                   int courseIndex = sessionIndex * 7 + rowIndex;
-                  return getCourseCell(course, courseIndex, asConstraint: courseIndex == 0);
+                  return getCourseCell(course, courseIndex,
+                      asConstraint: courseIndex == 0);
                 },
               ),
             ],
@@ -319,7 +366,10 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
             gradient: LinearGradient(
               begin: Alignment(0.5, 0.99),
               end: Alignment(0.5, 1),
-              colors: [widget.courseLayout.secondaryColor, widget.courseLayout.primaryColor],
+              colors: [
+                widget.courseLayout.secondaryColor,
+                widget.courseLayout.primaryColor
+              ],
             ),
           ),
           child: ScrollConfiguration(
@@ -372,10 +422,27 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
       reverseDuration: Duration(milliseconds: 400),
     );
     updateWidgetSize();
-    widget.refresh(() {
-      setState(() {
+    widget.refresh((
+        {double nameSize,
+        double roomSize,
+        double dayOfWeekSize,
+        COLOR_MODE roomColor}) {
+      if (nameSize == null &&
+          roomSize == null &&
+          dayOfWeekSize == null &&
+          roomColor == null)
         fetchDB();
-      });
+      else
+        setState(() {
+          prefs[PREF_TYPE.CONFIG_NAME_SIZE].value =
+              nameSize ?? prefs[PREF_TYPE.CONFIG_NAME_SIZE].value;
+          prefs[PREF_TYPE.CONFIG_ROOM_SIZE].value =
+              roomSize ?? prefs[PREF_TYPE.CONFIG_ROOM_SIZE].value;
+          prefs[PREF_TYPE.CONFIG_WEEK_SIZE].value =
+              dayOfWeekSize ?? prefs[PREF_TYPE.CONFIG_WEEK_SIZE].value;
+          prefs[PREF_TYPE.CONFIG_ROOM_COLOR].value =
+              roomColor ?? prefs[PREF_TYPE.CONFIG_ROOM_COLOR].value;
+        });
     });
     PREF_TYPE.values.forEach((element) {
       prefs[element] = Preference(element);
@@ -435,7 +502,8 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
             callback: (EditToolType editToolType) async {
               switch (editToolType) {
                 case EditToolType.ADD:
-                  int chosenCount = chosen.where((element) => element).toList().length;
+                  int chosenCount =
+                      chosen.where((element) => element).toList().length;
                   if (chosenCount < 1)
                     MessageSnackBar.showSnackBar(
                       context,
@@ -444,8 +512,15 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
                       duration: Duration(milliseconds: 750),
                     );
                   else {
-                    List<int> chosenIndex = chosen.asMap().entries.where((element) => element.value).map((e) => e.key).toList();
-                    Course defaultCourse = chosenIndex.map((e) => widget.courses[e]).fold(Course.nullValue(), (value, element) {
+                    List<int> chosenIndex = chosen
+                        .asMap()
+                        .entries
+                        .where((element) => element.value)
+                        .map((e) => e.key)
+                        .toList();
+                    Course defaultCourse = chosenIndex
+                        .map((e) => widget.courses[e])
+                        .fold(Course.nullValue(), (value, element) {
                       if (value.name == null)
                         value.name = element.name;
                       else if (value.name != element.name) value.name = '';
@@ -454,15 +529,20 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
                       else if (value.room != element.room) value.room = '';
                       if (value.color == null)
                         value.color = element.color;
-                      else if (value.color.value != element.color.value) value.color = Colors.pink.shade700;
-                      if (value.color == null) value.color = Colors.pink.shade700;
+                      else if (value.color.value != element.color.value)
+                        value.color = Colors.pink.shade700;
+                      if (value.color == null)
+                        value.color = Colors.pink.shade700;
                       return value;
                     });
 
                     if (defaultCourse == null) defaultCourse = Course.dummy();
-                    Course course = await TimetableDialog.showAddEditCourseDialog(context, widget.courseLayout, defaultCourse);
+                    Course course =
+                        await TimetableDialog.showAddEditCourseDialog(
+                            context, widget.courseLayout, defaultCourse);
                     if (course == null) return;
-                    if (course.room.isEmpty) course.color = Colors.pink.shade700;
+                    if (course.room.isEmpty)
+                      course.color = Colors.pink.shade700;
                     chosen.asMap().entries.forEach((element) {
                       int index = element.key;
                       bool val = element.value;
@@ -478,7 +558,8 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
                   }
                   break;
                 case EditToolType.COPY:
-                  int chosenCount = chosen.where((element) => element).toList().length;
+                  int chosenCount =
+                      chosen.where((element) => element).toList().length;
                   if (chosenCount < 1)
                     MessageSnackBar.showSnackBar(
                       context,
@@ -505,9 +586,13 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
                   }
                   break;
                 case EditToolType.PASTE:
-                  int chosenCount = chosen.where((element) => element).toList().length;
+                  int chosenCount =
+                      chosen.where((element) => element).toList().length;
                   if (chosenCount <= 0)
-                    MessageSnackBar.showSnackBar(context, 'Please choose at least one course.', widget.courseLayout);
+                    MessageSnackBar.showSnackBar(
+                        context,
+                        'Please choose at least one course.',
+                        widget.courseLayout);
                   else {
                     chosen.asMap().entries.forEach((element) {
                       int index = element.key;
@@ -524,9 +609,13 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
                   }
                   break;
                 case EditToolType.DELETE:
-                  int chosenCount = chosen.where((element) => element).toList().length;
+                  int chosenCount =
+                      chosen.where((element) => element).toList().length;
                   if (chosenCount <= 0)
-                    MessageSnackBar.showSnackBar(context, 'Please choose at least one course.', widget.courseLayout);
+                    MessageSnackBar.showSnackBar(
+                        context,
+                        'Please choose at least one course.',
+                        widget.courseLayout);
                   else {
                     chosen.asMap().entries.forEach((element) {
                       int index = element.key;
@@ -570,7 +659,8 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
 
 class _TimetableListViewBehaviour extends ScrollBehavior {
   @override
-  Widget buildViewportChrome(BuildContext context, Widget child, AxisDirection axisDirection) {
+  Widget buildViewportChrome(
+      BuildContext context, Widget child, AxisDirection axisDirection) {
     return child;
   }
 }
@@ -580,7 +670,13 @@ class _WeekBar extends StatelessWidget {
   final double blankWidth;
   final double height;
   final double dayOfWeekSize;
-  _WeekBar({this.dayOfWeekSize, this.courseLayout = const CourseLayout.light(), this.blankWidth, this.height, Key key}) : super(key: key);
+  _WeekBar(
+      {this.dayOfWeekSize,
+      this.courseLayout = const CourseLayout.light(),
+      this.blankWidth,
+      this.height,
+      Key key})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -643,7 +739,15 @@ class _EditToolBar extends StatefulWidget {
   final int chosenCount;
   final AnimationController animationController;
   final void Function(EditToolType) callback;
-  _EditToolBar({this.hasCopied, this.chosenCount, this.courseLayout, this.callback, this.height, this.animationController, Key key}) : super(key: key);
+  _EditToolBar(
+      {this.hasCopied,
+      this.chosenCount,
+      this.courseLayout,
+      this.callback,
+      this.height,
+      this.animationController,
+      Key key})
+      : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _EditToolBarState();
@@ -652,7 +756,9 @@ class _EditToolBar extends StatefulWidget {
 class _EditToolBarState extends State<_EditToolBar> {
   Animation _animation;
 
-  Widget getOperationButton(IconData icon, String tooltip, EditToolType editToolType) => Material(
+  Widget getOperationButton(
+          IconData icon, String tooltip, EditToolType editToolType) =>
+      Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: () {},
@@ -673,7 +779,9 @@ class _EditToolBarState extends State<_EditToolBar> {
     List<Widget> result = [
       getOperationButton(
         Icons.edit,
-        widget.chosenCount > 1 ? S.of(context).mainPageDrawerAddEdit : S.of(context).mainPageDrawerAddEditSingle,
+        widget.chosenCount > 1
+            ? S.of(context).mainPageDrawerAddEdit
+            : S.of(context).mainPageDrawerAddEditSingle,
         EditToolType.ADD,
       ),
       getOperationButton(
@@ -683,15 +791,20 @@ class _EditToolBarState extends State<_EditToolBar> {
       ),
       getOperationButton(
         Icons.content_paste,
-        widget.chosenCount > 1 ? S.of(context).mainPageDrawerPaste : S.of(context).mainPageDrawerPasteSingle,
+        widget.chosenCount > 1
+            ? S.of(context).mainPageDrawerPaste
+            : S.of(context).mainPageDrawerPasteSingle,
         EditToolType.PASTE,
       ),
       getOperationButton(
         Icons.delete,
-        widget.chosenCount > 1 ? S.of(context).mainPageDrawerDelete : S.of(context).mainPageDrawerDeleteSingle,
+        widget.chosenCount > 1
+            ? S.of(context).mainPageDrawerDelete
+            : S.of(context).mainPageDrawerDeleteSingle,
         EditToolType.DELETE,
       ),
-      getOperationButton(Icons.delete_forever, S.of(context).mainPageDrawerDeleteAll, EditToolType.DELETE_ALL),
+      getOperationButton(Icons.delete_forever,
+          S.of(context).mainPageDrawerDeleteAll, EditToolType.DELETE_ALL),
     ];
 
     if (!widget.hasCopied) result.removeAt(2);
@@ -701,10 +814,12 @@ class _EditToolBarState extends State<_EditToolBar> {
   @override
   void initState() {
     super.initState();
-    _animation = Tween<double>(begin: -widget.height, end: 0).chain(CurveTween(curve: Curves.fastOutSlowIn)).animate(widget.animationController)
-      ..addListener(() {
-        setState(() {});
-      });
+    _animation = Tween<double>(begin: -widget.height, end: 0)
+        .chain(CurveTween(curve: Curves.fastOutSlowIn))
+        .animate(widget.animationController)
+          ..addListener(() {
+            setState(() {});
+          });
   }
 
   @override

@@ -10,7 +10,6 @@ const int _DB_VERSION = 2;
 
 class PreferenceProvider {
   Database db;
-  void Function() refreshTimetable;
 
   PreferenceProvider();
 
@@ -58,10 +57,15 @@ class PreferenceProvider {
   Future setPreference(Preference preference) async {
     int index = PREF_TYPE.values.indexWhere((element) => getPrefName(element) == preference.name);
     await db.update(_TABLE_NAME, preference.toMap(), where: '$_COLUMN_ID = ?', whereArgs: [index+1]);
+  }
 
-    PREF_TYPE type = PREF_TYPE.values[index];
-    if(type == PREF_TYPE.CONFIG_ROOM_COLOR || type == PREF_TYPE.CONFIG_NAME_SIZE || type == PREF_TYPE.CONFIG_ROOM_SIZE || type == PREF_TYPE.CONFIG_WEEK_SIZE)
-      refreshTimetable?.call();
+  Future setPreferences(List<Preference> preferences) async {
+    var batch = db.batch();
+    for(Preference preference in preferences) {
+      int index = PREF_TYPE.values.indexWhere((element) => getPrefName(element) == preference.name);
+      batch.update(_TABLE_NAME, preference.toMap(), where: '$_COLUMN_ID = ?', whereArgs: [index+1]);
+    }
+    await batch.commit();
   }
 
   Future close() async => db.close();

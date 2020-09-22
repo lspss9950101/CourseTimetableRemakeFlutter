@@ -20,4 +20,5 @@ class CourseLayout {
 
 enum MainPageCallBackMSG {
   SET_DARK_MODE,
+  SET_CONFIG_APPEARANCE,
 }
