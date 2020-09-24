@@ -2,7 +2,6 @@ import 'package:course_timetable_remake/DBPreference.dart';
 import 'package:course_timetable_remake/Dialog.dart';
 import 'package:course_timetable_remake/Resources.dart';
 import 'package:flutter/material.dart';
-import 'Preference.dart';
 import 'generated/l10n.dart';
 import 'package:outline_material_icons/outline_material_icons.dart';
 

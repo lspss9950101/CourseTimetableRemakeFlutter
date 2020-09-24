@@ -1,16 +1,12 @@
+import 'package:course_timetable_remake/TimeOfDayRange.dart';
 import 'package:flutter/material.dart';
 
 class Session {
   String name;
-  DateTime begin, end;
-  Session(this.begin, this.end, {this.name});
+  TimeOfDayRange timeOfDayRange;
+  Session({@required this.name, @required this.timeOfDayRange});
   Session.dummy() {
-    this.name = 'S';
-    this.begin = DateTime.now();
-    this.end = DateTime.now();
-  }
-  Session.fromDateTimeRange(this.name, DateTimeRange dateTimeRange) {
-    this.begin = dateTimeRange.start;
-    this.end = dateTimeRange.end;
+    name = 'S';
+    timeOfDayRange = TimeOfDayRange.nowToNow();
   }
 }

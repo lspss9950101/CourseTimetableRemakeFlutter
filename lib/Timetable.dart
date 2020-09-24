@@ -13,6 +13,7 @@ import 'package:intl/intl.dart';
 import 'Course.dart';
 import 'MessageSnackBar.dart';
 import 'Session.dart';
+import 'TimeOfDayRange.dart';
 import 'generated/l10n.dart';
 
 class Timetable extends StatefulWidget {
@@ -85,7 +86,7 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
               height: 6,
             ),
             Text(
-              DateFormat('HH:mm').format(session.begin),
+                session.timeOfDayRange.start.toFormattedString(),
               style: Theme.of(context)
                   .textTheme
                   .caption
@@ -108,7 +109,7 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
               height: 2,
             ),
             Text(
-              DateFormat('HH:mm').format(session.end),
+              session.timeOfDayRange.end.toFormattedString(),
               style: Theme.of(context)
                   .textTheme
                   .caption
@@ -445,7 +446,7 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
         });
     });
     PREF_TYPE.values.forEach((element) {
-      prefs[element] = Preference(element);
+      prefs[element] = Preference.byDefault(element);
     });
   }
 

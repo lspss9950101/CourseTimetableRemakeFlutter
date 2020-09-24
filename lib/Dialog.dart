@@ -474,7 +474,7 @@ class _ContextSettingDialogState extends State<_ContextSettingDialog> {
               });
             }, (value) {
               widget.preferenceProvider.setPreference(
-                  Preference.raw(PREF_TYPE.CONFIG_WEEK_SIZE, value));
+                  Preference(PREF_TYPE.CONFIG_WEEK_SIZE, value));
             }),
             getLabeledSlider('NAME', nameSize, (value) {
               setState(() {
@@ -483,7 +483,7 @@ class _ContextSettingDialogState extends State<_ContextSettingDialog> {
               });
             }, (value) {
               widget.preferenceProvider.setPreference(
-                  Preference.raw(PREF_TYPE.CONFIG_NAME_SIZE, value));
+                  Preference(PREF_TYPE.CONFIG_NAME_SIZE, value));
             }),
             getLabeledSlider('ROOM', roomSize, (value) {
               setState(() {
@@ -492,7 +492,7 @@ class _ContextSettingDialogState extends State<_ContextSettingDialog> {
               });
             }, (value) {
               widget.preferenceProvider.setPreference(
-                  Preference.raw(PREF_TYPE.CONFIG_ROOM_SIZE, value));
+                  Preference(PREF_TYPE.CONFIG_ROOM_SIZE, value));
             }),
             Container(
               height: 16,
@@ -510,7 +510,7 @@ class _ContextSettingDialogState extends State<_ContextSettingDialog> {
                 roomColor = value;
                 widget.callback(roomColor: value);
                 widget.preferenceProvider.setPreference(
-                    Preference.raw(PREF_TYPE.CONFIG_ROOM_COLOR, value));
+                    Preference(PREF_TYPE.CONFIG_ROOM_COLOR, value));
               });
             }),
             Container(
@@ -820,7 +820,7 @@ class _WidgetSettingDialogState extends State<_WidgetSettingDialog> {
               });
             }, (value) {
               widget.preferenceProvider.setPreference(
-                  Preference.raw(PREF_TYPE.WIDGET_WEEK_SIZE, value));
+                  Preference(PREF_TYPE.WIDGET_WEEK_SIZE, value));
             }),
             getLabeledSlider('NAME', nameSize, (value) {
               setState(() {
@@ -828,7 +828,7 @@ class _WidgetSettingDialogState extends State<_WidgetSettingDialog> {
               });
             }, (value) {
               widget.preferenceProvider.setPreference(
-                  Preference.raw(PREF_TYPE.WIDGET_NAME_SIZE, value));
+                  Preference(PREF_TYPE.WIDGET_NAME_SIZE, value));
             }),
             getLabeledSlider('ROOM', roomSize, (value) {
               setState(() {
@@ -836,7 +836,7 @@ class _WidgetSettingDialogState extends State<_WidgetSettingDialog> {
               });
             }, (value) {
               widget.preferenceProvider.setPreference(
-                  Preference.raw(PREF_TYPE.WIDGET_ROOM_SIZE, value));
+                  Preference(PREF_TYPE.WIDGET_ROOM_SIZE, value));
             }),
             Container(
               height: 16,
@@ -853,14 +853,14 @@ class _WidgetSettingDialogState extends State<_WidgetSettingDialog> {
               setState(() {
                 dayOfWeekColor = value;
                 widget.preferenceProvider.setPreference(
-                    Preference.raw(PREF_TYPE.WIDGET_WEEK_COLOR, value));
+                    Preference(PREF_TYPE.WIDGET_WEEK_COLOR, value));
               });
             }),
             getLabeledColorPicker('BACKGROUND', dayOfWeekBackground, (value) {
               setState(() {
                 dayOfWeekBackground = value;
                 widget.preferenceProvider.setPreference(
-                    Preference.raw(PREF_TYPE.WIDGET_WEEK_BACKGROUND, value));
+                    Preference(PREF_TYPE.WIDGET_WEEK_BACKGROUND, value));
               });
             }),
             Container(
@@ -878,13 +878,13 @@ class _WidgetSettingDialogState extends State<_WidgetSettingDialog> {
               setState(() {
                 dayOfWeekColor = value;
                 widget.preferenceProvider.setPreference(
-                    Preference.raw(PREF_TYPE.WIDGET_CONTEXT_COLOR, value));
+                    Preference(PREF_TYPE.WIDGET_CONTEXT_COLOR, value));
               });
             }),
             getLabeledColorPicker('BACKGROUND', timetableBackground, (value) {
               setState(() {
                 timetableBackground = value;
-                widget.preferenceProvider.setPreference(Preference.raw(
+                widget.preferenceProvider.setPreference(Preference(
                     PREF_TYPE.WIDGET_CONTEXT_BACKGROUND,
                     timetableBackground.withOpacity(backgroundOpacity)));
               });
@@ -894,7 +894,7 @@ class _WidgetSettingDialogState extends State<_WidgetSettingDialog> {
                 backgroundOpacity = value;
               });
             }, (value) {
-              widget.preferenceProvider.setPreference(Preference.raw(
+              widget.preferenceProvider.setPreference(Preference(
                   PREF_TYPE.WIDGET_CONTEXT_BACKGROUND,
                   timetableBackground.withOpacity(value)));
             }),

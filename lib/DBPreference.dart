@@ -1,12 +1,12 @@
 import 'Preference.dart';
 import 'package:sqflite/sqflite.dart';
 
-const String COLUMN_PREF_NAME = 'name';
+const String COLUMN_PREF_TYPE = 'type';
 const String COLUMN_PREF_VALUE = 'value';
 
 const String _TABLE_NAME = 'preferences';
 const String _COLUMN_ID = '_id';
-const int _DB_VERSION = 2;
+const int _DB_VERSION = 1;
 
 class PreferenceProvider {
   Database db;
@@ -17,12 +17,12 @@ class PreferenceProvider {
     await db.execute('''
         create table $_TABLE_NAME (
         $_COLUMN_ID integer primary key autoincrement,
-        $COLUMN_PREF_NAME text not null,
+        $COLUMN_PREF_TYPE text not null,
         $COLUMN_PREF_VALUE text not null)
       ''');
     var batch = db.batch();
     for(PREF_TYPE prefType in PREF_TYPE.values)
-      batch.insert(_TABLE_NAME, Preference(prefType).toMap());
+      batch.insert(_TABLE_NAME, Preference.byDefault(prefType).toMap());
     await batch.commit();
   }
 
@@ -38,32 +38,28 @@ class PreferenceProvider {
   }
 
   Future<Map<PREF_TYPE, Preference>> getPreferences() async {
-    List<Map> maps = await db.query(_TABLE_NAME, columns: [COLUMN_PREF_NAME, COLUMN_PREF_VALUE,]);
-    return await maps.map((e) {
-      PREF_TYPE type = PREF_TYPE.values.firstWhere((element) => getPrefName(element) == e[COLUMN_PREF_NAME]);
-      return {'TYPE' :type, 'VALUE': Preference.fromMap(e)};
-    }).fold(Map<PREF_TYPE, Preference>(), (previousValue, element) {
-      (previousValue as Map)[element['TYPE']] = element["VALUE"];
-      return previousValue;
+    List<Map> maps = await db.query(_TABLE_NAME, columns: [COLUMN_PREF_TYPE, COLUMN_PREF_VALUE,]);
+    Map<PREF_TYPE, Preference> result = Map();
+    maps.forEach((element) {
+      Preference preference = Preference.fromMap(element);
+      result[preference.type] = preference;
     });
+    return result;
   }
 
   Future<Preference> getPreference(PREF_TYPE type) async {
-    int index = PREF_TYPE.values.indexOf(type);
-    List<Map> maps = await db.query(_TABLE_NAME, columns: [_COLUMN_ID, COLUMN_PREF_NAME, COLUMN_PREF_VALUE,], where: '$_COLUMN_ID = ?', whereArgs: [index+1]);
+    List<Map> maps = await db.query(_TABLE_NAME, columns: [COLUMN_PREF_TYPE, COLUMN_PREF_VALUE,], where: '$COLUMN_PREF_TYPE = ?', whereArgs: [type.toString()]);
     return Preference.fromMap(maps.first);
   }
 
   Future setPreference(Preference preference) async {
-    int index = PREF_TYPE.values.indexWhere((element) => getPrefName(element) == preference.name);
-    await db.update(_TABLE_NAME, preference.toMap(), where: '$_COLUMN_ID = ?', whereArgs: [index+1]);
+    await db.update(_TABLE_NAME, preference.toMap(), where: '$COLUMN_PREF_TYPE = ?', whereArgs: [preference.type.toString()]);
   }
 
   Future setPreferences(List<Preference> preferences) async {
     var batch = db.batch();
     for(Preference preference in preferences) {
-      int index = PREF_TYPE.values.indexWhere((element) => getPrefName(element) == preference.name);
-      batch.update(_TABLE_NAME, preference.toMap(), where: '$_COLUMN_ID = ?', whereArgs: [index+1]);
+      batch.update(_TABLE_NAME, preference.toMap(), where: '$COLUMN_PREF_TYPE = ?', whereArgs: [preference.type.toString()]);
     }
     await batch.commit();
   }

@@ -82,7 +82,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
     sessions = sessionName
         .asMap()
         .entries
-        .map((e) => Session.fromDateTimeRange(e.value, sessionTime[e.key]))
+        .map((e) => Session(name: e.value, timeOfDayRange: sessionTime[e.key]))
         .toList();
 
     reloadCourse();
@@ -120,7 +120,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
                 darkMode = arg;
               });
               await _preferenceProvider
-                  .setPreference(Preference.raw(PREF_TYPE.DARK_MODE, arg));
+                  .setPreference(Preference(PREF_TYPE.DARK_MODE, arg));
               break;
             case MainPageCallBackMSG.SET_CONFIG_APPEARANCE:
               refreshTimetable(nameSize: arg['nameSize'], roomSize: arg['roomSize'], dayOfWeekSize: arg['dayOfWeekSize'], roomColor: arg['roomColor'],);

@@ -1,26 +1,8 @@
 import 'package:course_timetable_remake/DBPreference.dart';
 import 'package:course_timetable_remake/Dialog.dart';
-import 'package:flutter/material.dart';
+import 'package:course_timetable_remake/TimeOfDayRange.dart';
 import 'package:intl/intl.dart';
-
-const String PREF_DARK_MODE = 'DARK_MODE';
-const String PREF_CONFIG_WEEK_SIZE = "CONFIG_WEEK_SIZE";
-const String PREF_CONFIG_NAME_SIZE = 'CONFIG_NAME_SIZE';
-const String PREF_CONFIG_ROOM_SIZE = 'CONFIG_ROOM_SIZE';
-const String PREF_CONFIG_ROOM_COLOR = 'CONFIG_ROOM_COLOR';
-const String PREF_WIDGET_WEEK_SIZE = 'WIDGET_WEEK_SIZE';
-const String PREF_WIDGET_WEEK_COLOR = 'WIDGET_WEEK_COLOR';
-const String PREF_WIDGET_WEEK_BACKGROUND = 'WIDGET_WEEK_BACKGROUND';
-const String PREF_WIDGET_NAME_SIZE = 'WIDGET_NAME_SIZE';
-const String PREF_WIDGET_ROOM_SIZE = 'WIDGET_ROOM_SIZE';
-const String PREF_WIDGET_CONTEXT_COLOR = 'WIDGET_CONTEXT_COLOR';
-const String PREF_WIDGET_CONTEXT_BACKGROUND = 'WIDGET_CONTEXT_BACKGROUND';
-const String PREF_SYNC_ENABLED = 'SYNC_ENABLED';
-const String PREF_SYNC_SESSION = 'SYNC_SESSION';
-const String PREF_SYNC_EVENT_ID = 'SYNC_EVENT_ID';
-const String PREF_SYNC_CALENDAR_ID = 'SYNC_CALENDAR_ID';
-const String PREF_SESSION_NAME = 'SESSION_NAME';
-const String PREF_SESSION_TIME = 'SESSION_TIME';
+import 'package:flutter/material.dart';
 
 enum PREF_TYPE {
   DARK_MODE,
@@ -49,60 +31,121 @@ enum _PREF_TYPE_ATTR {
   TO_STRING_FUNCTION,
 }
 
-static const Map<Map<_PREF_TYPE_ATTR, Object>> _PREF_DEFINITIONS = {};
+bool _parseBool(String s) => s.toLowerCase() == 'true';
 
-String getPrefDefault(PREF_TYPE type) {
-  switch(type) {
-    case PREF_TYPE.DARK_MODE:
-      return 'false';
-      break;
-    case PREF_TYPE.CONFIG_WEEK_SIZE:
-      return '1.0';
-      break;
-    case PREF_TYPE.CONFIG_NAME_SIZE:
-      return '1.0';
-      break;
-    case PREF_TYPE.CONFIG_ROOM_SIZE:
-      return '1.0';
-      break;
-    case PREF_TYPE.WIDGET_WEEK_SIZE:
-      return '1.0';
-      break;
-    case PREF_TYPE.WIDGET_WEEK_COLOR:
-      return '0';
-      break;
-    case PREF_TYPE.WIDGET_WEEK_BACKGROUND:
-      return Colors.pink.value.toString();
-      break;
-    case PREF_TYPE.WIDGET_NAME_SIZE:
-      return '1.0';
-      break;
-    case PREF_TYPE.WIDGET_ROOM_SIZE:
-      return '1.0';
-      break;
-    case PREF_TYPE.WIDGET_CONTEXT_COLOR:
-      return '0';
-      break;
-    case PREF_TYPE.WIDGET_CONTEXT_BACKGROUND:
-      return Colors.grey.shade50.value.toString();
-      break;
-    case PREF_TYPE.SYNC_ENABLED:
-      return 'false';
-      break;
-    case PREF_TYPE.SYNC_SESSION:
-      return DateTime.now().year.toString() + '0101 00:00-' + DateTime.now().year.toString() + '1231 23:59';
-      break;
-    case PREF_TYPE.SYNC_EVENT_ID:
-      return '-1';
-      break;
-    case PREF_TYPE.SYNC_CALENDAR_ID:
-      return '-1';
-      break;
-    case PREF_TYPE.SESSION_NAME:
-      return 'A\nB\nC\nD\nX\nE\nF\nG\nH\nY\nI\nJ\nK';
-      break;
-    case PREF_TYPE.SESSION_TIME:
-      return '''
+Color _parseColor(String s) => Color(int.parse(s));
+
+COLOR_MODE _parseColorMode(String s) => COLOR_MODE.values[int.parse(s)];
+
+DateTimeRange _parseDateTimeRange(String s) => DateTimeRange(start: DateTime.parse(s.split('-')[0]), end: DateTime.parse(s.split('-')[1]));
+
+List<String> _parseStringList(String s) => s.split('\n');
+
+List<TimeOfDayRange> _parseTimeOfDayRangeList(String s) => _parseStringList(s).map((e) {
+      List<int> parsedString = e.split(RegExp(r'[-:]')).map((e) => int.parse(e)).toList();
+      return TimeOfDayRange(start: TimeOfDay(hour: parsedString[0], minute: parsedString[1]), end: TimeOfDay(hour: parsedString[2], minute: parsedString[3]));
+    }).toList();
+
+String _primitiveToString(Object o) => o.toString();
+
+String _color_modeToString(COLOR_MODE c) => COLOR_MODE.values.indexOf(c).toString();
+
+String _colorToString(Color c) => c.value.toString();
+
+String _dateTimeRangeToString(DateTimeRange d) => DateFormat('yyyyMMdd HH:mm').format(d.start) + '-' + DateFormat('yyyyMMdd HH:mm').format(d.end);
+
+String _stringListToString(List<String> ss) => ss.join('\n');
+
+String _timeOfDayRangeListToString(List<TimeOfDayRange> ts) => ts.join('\n');
+
+Map<PREF_TYPE, Map<_PREF_TYPE_ATTR, Object>> _PREF_DEFINITIONS = {
+  PREF_TYPE.DARK_MODE: {
+    _PREF_TYPE_ATTR.DEFAULT_VALUE: false,
+    _PREF_TYPE_ATTR.PARSE_FUNCTION: _parseBool,
+    _PREF_TYPE_ATTR.TO_STRING_FUNCTION: _primitiveToString,
+  },
+  PREF_TYPE.CONFIG_WEEK_SIZE: {
+    _PREF_TYPE_ATTR.DEFAULT_VALUE: 1.0,
+    _PREF_TYPE_ATTR.PARSE_FUNCTION: double.parse,
+    _PREF_TYPE_ATTR.TO_STRING_FUNCTION: _primitiveToString,
+  },
+  PREF_TYPE.CONFIG_NAME_SIZE: {
+    _PREF_TYPE_ATTR.DEFAULT_VALUE: 1.0,
+    _PREF_TYPE_ATTR.PARSE_FUNCTION: double.parse,
+    _PREF_TYPE_ATTR.TO_STRING_FUNCTION: _primitiveToString,
+  },
+  PREF_TYPE.CONFIG_ROOM_SIZE: {
+    _PREF_TYPE_ATTR.DEFAULT_VALUE: 1.0,
+    _PREF_TYPE_ATTR.PARSE_FUNCTION: double.parse,
+    _PREF_TYPE_ATTR.TO_STRING_FUNCTION: _primitiveToString,
+  },
+  PREF_TYPE.CONFIG_ROOM_COLOR: {
+    _PREF_TYPE_ATTR.DEFAULT_VALUE: COLOR_MODE.LIGHT,
+    _PREF_TYPE_ATTR.PARSE_FUNCTION: _parseColorMode,
+    _PREF_TYPE_ATTR.TO_STRING_FUNCTION: _color_modeToString,
+  },
+  PREF_TYPE.WIDGET_WEEK_SIZE: {
+    _PREF_TYPE_ATTR.DEFAULT_VALUE: 1.0,
+    _PREF_TYPE_ATTR.PARSE_FUNCTION: double.parse,
+    _PREF_TYPE_ATTR.TO_STRING_FUNCTION: _primitiveToString,
+  },
+  PREF_TYPE.WIDGET_WEEK_COLOR: {
+    _PREF_TYPE_ATTR.DEFAULT_VALUE: COLOR_MODE.LIGHT,
+    _PREF_TYPE_ATTR.PARSE_FUNCTION: _parseColorMode,
+    _PREF_TYPE_ATTR.TO_STRING_FUNCTION: _color_modeToString,
+  },
+  PREF_TYPE.WIDGET_WEEK_BACKGROUND: {
+    _PREF_TYPE_ATTR.DEFAULT_VALUE: Colors.pink,
+    _PREF_TYPE_ATTR.PARSE_FUNCTION: _parseColor,
+    _PREF_TYPE_ATTR.TO_STRING_FUNCTION: _colorToString,
+  },
+  PREF_TYPE.WIDGET_NAME_SIZE: {
+    _PREF_TYPE_ATTR.DEFAULT_VALUE: 1.0,
+    _PREF_TYPE_ATTR.PARSE_FUNCTION: double.parse,
+    _PREF_TYPE_ATTR.TO_STRING_FUNCTION: _primitiveToString,
+  },
+  PREF_TYPE.WIDGET_ROOM_SIZE: {
+    _PREF_TYPE_ATTR.DEFAULT_VALUE: 1.0,
+    _PREF_TYPE_ATTR.PARSE_FUNCTION: double.parse,
+    _PREF_TYPE_ATTR.TO_STRING_FUNCTION: _primitiveToString,
+  },
+  PREF_TYPE.WIDGET_CONTEXT_COLOR: {
+    _PREF_TYPE_ATTR.DEFAULT_VALUE: COLOR_MODE.LIGHT,
+    _PREF_TYPE_ATTR.PARSE_FUNCTION: _parseColorMode,
+    _PREF_TYPE_ATTR.TO_STRING_FUNCTION: _color_modeToString,
+  },
+  PREF_TYPE.WIDGET_CONTEXT_BACKGROUND: {
+    _PREF_TYPE_ATTR.DEFAULT_VALUE: Colors.grey.shade50,
+    _PREF_TYPE_ATTR.PARSE_FUNCTION: _parseColor,
+    _PREF_TYPE_ATTR.TO_STRING_FUNCTION: _colorToString,
+  },
+  PREF_TYPE.SYNC_ENABLED: {
+    _PREF_TYPE_ATTR.DEFAULT_VALUE: false,
+    _PREF_TYPE_ATTR.PARSE_FUNCTION: _parseBool,
+    _PREF_TYPE_ATTR.TO_STRING_FUNCTION: _primitiveToString,
+  },
+  PREF_TYPE.SYNC_SESSION: {
+    _PREF_TYPE_ATTR.DEFAULT_VALUE: DateTimeRange(start: DateTime.now(), end: DateTime.now()),
+    _PREF_TYPE_ATTR.PARSE_FUNCTION: _parseDateTimeRange,
+    _PREF_TYPE_ATTR.TO_STRING_FUNCTION: _dateTimeRangeToString,
+  },
+  PREF_TYPE.SYNC_EVENT_ID: {
+    _PREF_TYPE_ATTR.DEFAULT_VALUE: 0,
+    _PREF_TYPE_ATTR.PARSE_FUNCTION: int.parse,
+    _PREF_TYPE_ATTR.TO_STRING_FUNCTION: _primitiveToString,
+  },
+  PREF_TYPE.SYNC_CALENDAR_ID: {
+    _PREF_TYPE_ATTR.DEFAULT_VALUE: 0,
+    _PREF_TYPE_ATTR.PARSE_FUNCTION: int.parse,
+    _PREF_TYPE_ATTR.TO_STRING_FUNCTION: _primitiveToString,
+  },
+  PREF_TYPE.SESSION_NAME: {
+    _PREF_TYPE_ATTR.DEFAULT_VALUE: _parseStringList('A\nB\nC\nD\nX\nE\nF\nG\nH\nY\nI\nJ\nK'),
+    _PREF_TYPE_ATTR.PARSE_FUNCTION: _parseStringList,
+    _PREF_TYPE_ATTR.TO_STRING_FUNCTION: _stringListToString,
+  },
+  PREF_TYPE.SESSION_TIME: {
+    _PREF_TYPE_ATTR.DEFAULT_VALUE: _parseTimeOfDayRangeList('''
       08:00-08:50
       09:00-09:50
       10:10-11:00
@@ -115,196 +158,51 @@ String getPrefDefault(PREF_TYPE type) {
       17:30-18:20
       18:30-19:20
       19:30-20:20
-      20:30-21:20''';
-      break;
-    case PREF_TYPE.CONFIG_ROOM_COLOR:
-      return '0';
-      break;
-  }
-  return null;
-}
+      20:30-21:20'''),
+    _PREF_TYPE_ATTR.PARSE_FUNCTION: _parseTimeOfDayRangeList,
+    _PREF_TYPE_ATTR.TO_STRING_FUNCTION: _timeOfDayRangeListToString,
+  },
+};
 
-dynamic castPreference(PREF_TYPE type, String data) {
-  switch(type) {
-    case PREF_TYPE.DARK_MODE:
-      return data.toLowerCase() == 'true';
-      break;
-    case PREF_TYPE.CONFIG_WEEK_SIZE:
-      return double.parse(data);
-      break;
-    case PREF_TYPE.CONFIG_NAME_SIZE:
-      return double.parse(data);
-      break;
-    case PREF_TYPE.CONFIG_ROOM_SIZE:
-      return double.parse(data);
-      break;
-    case PREF_TYPE.WIDGET_WEEK_SIZE:
-      return double.parse(data);
-      break;
-    case PREF_TYPE.WIDGET_WEEK_COLOR:
-      return COLOR_MODE.values[int.parse(data)];
-      break;
-    case PREF_TYPE.WIDGET_WEEK_BACKGROUND:
-      return Color(int.parse(data));
-      break;
-    case PREF_TYPE.WIDGET_NAME_SIZE:
-      return double.parse(data);
-      break;
-    case PREF_TYPE.WIDGET_ROOM_SIZE:
-      return double.parse(data);
-      break;
-    case PREF_TYPE.WIDGET_CONTEXT_COLOR:
-      return COLOR_MODE.values[int.parse(data)];
-      break;
-    case PREF_TYPE.WIDGET_CONTEXT_BACKGROUND:
-      return Color(int.parse(data));
-      break;
-    case PREF_TYPE.SYNC_ENABLED:
-      return data.toLowerCase() == 'true';
-      break;
-    case PREF_TYPE.SYNC_SESSION:
-      String begin = data.split('-')[0];
-      String end = data.split('-')[1];
-      return DateTimeRange(start: DateTime.parse(begin), end: DateTime.parse(end),);
-      break;
-    case PREF_TYPE.SYNC_EVENT_ID:
-      return int.parse(data);
-      break;
-    case PREF_TYPE.SYNC_CALENDAR_ID:
-      return int.parse(data);
-      break;
-    case PREF_TYPE.SESSION_NAME:
-      return data.split('\n');
-      break;
-    case PREF_TYPE.SESSION_TIME:
-      List<String> s = data.split('\n');
-      return s.map((e) {
-        e = e.replaceAll(' ', '');
-        DateTime start = DateTime.parse('0000-01-01 ' + e.split('-')[0]);
-        DateTime end = DateTime.parse('0000-01-01 ' + e.split('-')[1]);
-        return DateTimeRange(start: start, end: end);
-      },).toList();
-      break;
-    case PREF_TYPE.CONFIG_ROOM_COLOR:
-      return COLOR_MODE.values[int.parse(data)];
-      break;
+extension PrefExtension on PREF_TYPE {
+  dynamic getDefaultValue() {
+    return _PREF_DEFINITIONS[this][_PREF_TYPE_ATTR.DEFAULT_VALUE];
+  }
+
+  dynamic Function(String) getParseFunction() {
+    return _PREF_DEFINITIONS[this][_PREF_TYPE_ATTR.PARSE_FUNCTION];
+  }
+
+  dynamic getToStringFunction() {
+    return _PREF_DEFINITIONS[this][_PREF_TYPE_ATTR.TO_STRING_FUNCTION];
   }
 }
-
-/*extension PrefExtension on PREF_TYPE {
-  String toString() {
-    _PREF_DEFINITION[this][_PREF_TYPE_ATTR.TO_STRING_FUNCTION];
-  }
-}*/
 
 class Preference {
-  String name;
+  PREF_TYPE type;
   dynamic value;
 
-  Preference(PREF_TYPE type) {
-    this.name = getPrefName(type);
-    this.value = castPreference(type, getPrefDefault(type));
-  }
+  Preference(this.type, this.value);
 
-  Preference.raw(PREF_TYPE type, dynamic value) {
-    this.name = getPrefName(type);
-    this.value = value;
+  Preference.byDefault(this.type) {
+    value = type.getDefaultValue();
   }
 
   Preference.fromMap(Map<String, dynamic> map) {
-    this.name = map[COLUMN_PREF_NAME];
-    this.value = castPreference(PREF_TYPE.values.firstWhere((element) => getPrefName(element) == this.name), map[COLUMN_PREF_VALUE]);
+    type = PREF_TYPE.values.firstWhere((element) => element.toString() == map[COLUMN_PREF_TYPE]);
+    value = type.getParseFunction().call(map[COLUMN_PREF_VALUE]);
   }
 
   Map<String, dynamic> toMap() {
     Map<String, dynamic> map = {
-      COLUMN_PREF_NAME: this.name,
-      COLUMN_PREF_VALUE: valueToString(),
+      COLUMN_PREF_TYPE: type.toString(),
+      COLUMN_PREF_VALUE: type.getToStringFunction().call(value),
     };
     return map;
   }
 
-  String valueToString() {
-    PREF_TYPE type = PREF_TYPE.values.firstWhere((element) => getPrefName(element) == this.name);
-    String valueString;
-    if(type == PREF_TYPE.WIDGET_WEEK_BACKGROUND || type == PREF_TYPE.WIDGET_CONTEXT_BACKGROUND)
-      valueString = (value as Color).value.toString();
-    else if(type == PREF_TYPE.CONFIG_ROOM_COLOR || type == PREF_TYPE.WIDGET_CONTEXT_COLOR || type == PREF_TYPE.WIDGET_WEEK_COLOR)
-      valueString = value == COLOR_MODE.LIGHT ? '0' : value == COLOR_MODE.DARK ? '1' : '2';
-    else if(type == PREF_TYPE.SYNC_SESSION)
-      valueString = DateFormat('yyyyMMdd HH:mm').format((value as DateTimeRange).start) + '-' + DateFormat('yyyyMMdd HH:mm').format((value as DateTimeRange).end);
-    else if(type == PREF_TYPE.SESSION_NAME)
-      valueString = (value as List<String>).join('\n');
-    else if(type == PREF_TYPE.SESSION_TIME)
-      valueString = (value as List<DateTimeRange>).map((e) => DateFormat('HH:mm').format(e.start) + '-' + DateFormat('HH:mm').format(e.end)).join('\n');
-    else
-      valueString = value.toString();
-    return valueString;
-  }
-
   String toString() {
-    String valueString = valueToString();
-    return 'Preference(name: $name, value: $valueString)';
+    String valueString = type.getToStringFunction().call(value);
+    return 'Preference(name: $type, value: $valueString)';
   }
-
-  static String getPrefName(PREF_TYPE type) {
-    switch(type) {
-      case PREF_TYPE.DARK_MODE:
-        return PREF_DARK_MODE;
-        break;
-      case PREF_TYPE.CONFIG_WEEK_SIZE:
-        return PREF_CONFIG_WEEK_SIZE;
-        break;
-      case PREF_TYPE.CONFIG_NAME_SIZE:
-        return PREF_CONFIG_NAME_SIZE;
-        break;
-      case PREF_TYPE.CONFIG_ROOM_SIZE:
-        return PREF_CONFIG_ROOM_SIZE;
-        break;
-      case PREF_TYPE.WIDGET_WEEK_SIZE:
-        return PREF_WIDGET_WEEK_SIZE;
-        break;
-      case PREF_TYPE.WIDGET_WEEK_COLOR:
-        return PREF_WIDGET_WEEK_COLOR;
-        break;
-      case PREF_TYPE.WIDGET_WEEK_BACKGROUND:
-        return PREF_WIDGET_WEEK_BACKGROUND;
-        break;
-      case PREF_TYPE.WIDGET_NAME_SIZE:
-        return PREF_WIDGET_NAME_SIZE;
-        break;
-      case PREF_TYPE.WIDGET_ROOM_SIZE:
-        return PREF_WIDGET_ROOM_SIZE;
-        break;
-      case PREF_TYPE.WIDGET_CONTEXT_COLOR:
-        return PREF_WIDGET_CONTEXT_COLOR;
-        break;
-      case PREF_TYPE.WIDGET_CONTEXT_BACKGROUND:
-        return PREF_WIDGET_CONTEXT_BACKGROUND;
-        break;
-      case PREF_TYPE.SYNC_ENABLED:
-        return PREF_SYNC_ENABLED;
-        break;
-      case PREF_TYPE.SYNC_SESSION:
-        return PREF_SYNC_SESSION;
-        break;
-      case PREF_TYPE.SYNC_EVENT_ID:
-        return PREF_SYNC_EVENT_ID;
-        break;
-      case PREF_TYPE.SYNC_CALENDAR_ID:
-        return PREF_SYNC_CALENDAR_ID;
-        break;
-      case PREF_TYPE.SESSION_NAME:
-        return PREF_SESSION_NAME;
-        break;
-      case PREF_TYPE.SESSION_TIME:
-        return PREF_SESSION_TIME;
-        break;
-      case PREF_TYPE.CONFIG_ROOM_COLOR:
-        return PREF_CONFIG_ROOM_COLOR;
-        break;
-    }
-    return null;
-  }
-
 }
