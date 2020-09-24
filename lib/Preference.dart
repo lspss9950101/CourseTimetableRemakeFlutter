@@ -191,11 +191,9 @@ dynamic castPreference(PREF_TYPE type, String data) {
   }
 }
 
-/*extension PrefExtension on PREF_TYPE {
-  String toString() {
-    _PREF_DEFINITION[this][_PREF_TYPE_ATTR.TO_STRING_FUNCTION];
-  }
-}*/
+extension PrefExtension on PREF_TYPE {
+  String Function() toString()
+}
 
 class Preference {
   String name;
