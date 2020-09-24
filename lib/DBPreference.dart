@@ -9,11 +9,15 @@ const String _COLUMN_ID = '_id';
 const int _DB_VERSION = 1;
 
 class PreferenceProvider {
+  static PreferenceProvider instance;
+
+  static PreferenceProvider getInstance() => instance ?? (instance = PreferenceProvider());
+
   Database db;
 
   PreferenceProvider();
 
-  void _onCreate(Database db, int version) async {
+  static void _onCreate(Database db, int version) async {
     await db.execute('''
         create table $_TABLE_NAME (
         $_COLUMN_ID integer primary key autoincrement,
@@ -26,15 +30,17 @@ class PreferenceProvider {
     await batch.commit();
   }
 
-  void _onUpgrade(Database db, int versionOld, int version) async {
+  static void _onUpgrade(Database db, int versionOld, int version) async {
     await db.execute('''
         drop table if exists $_TABLE_NAME
       ''');
     _onCreate(db, version);
   }
 
-  Future open(String path) async {
-    db = await openDatabase(path, version: _DB_VERSION, onCreate: _onCreate, onUpgrade: _onUpgrade, onDowngrade: _onUpgrade);
+  static Future open(String path) async {
+    getInstance();
+    if(instance.db != null) await instance.db.close();
+    instance.db = await openDatabase(path, version: _DB_VERSION, onCreate: _onCreate, onUpgrade: _onUpgrade, onDowngrade: _onUpgrade);
   }
 
   Future<Map<PREF_TYPE, Preference>> getPreferences() async {

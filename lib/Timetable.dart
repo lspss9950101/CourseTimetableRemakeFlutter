@@ -20,14 +20,12 @@ class Timetable extends StatefulWidget {
   final List<Course> courses;
   final List<Session> sessions;
   final CourseLayout courseLayout;
-  final PreferenceProvider preferenceProvider;
   final void Function() saveCourseToDB;
   final void Function(Function()) refresh;
 
   Timetable(
       {this.refresh,
       this.saveCourseToDB,
-      this.preferenceProvider,
       this.courses = const [],
       this.sessions = const [],
       this.courseLayout = const CourseLayout.light(),
@@ -49,6 +47,7 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
   List<bool> chosen;
   Course copiedCourse;
   Map prefs = Map<PREF_TYPE, Preference>();
+  PreferenceProvider _preferenceProvider = PreferenceProvider.getInstance();
 
   void setEditMode(bool val) {
     if (val == editMode) return;
@@ -451,7 +450,7 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
   }
 
   void fetchDB() async {
-    prefs = await widget.preferenceProvider?.getPreferences();
+    prefs = await _preferenceProvider?.getPreferences();
     setState(() {});
   }
 

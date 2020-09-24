@@ -8,8 +8,7 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'Course.dart';
 
 class TimetableDialog {
-  static Future<Course> showAddEditCourseDialog(
-      BuildContext context, CourseLayout courseLayout, Course defaultCourse) {
+  static Future<Course> showAddEditCourseDialog(BuildContext context, CourseLayout courseLayout, Course defaultCourse) {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -23,11 +22,8 @@ class TimetableDialog {
     );
   }
 
-  static Future showContextSettingDialog(
-      BuildContext context,
-      PreferenceProvider preferenceProvider,
-      void Function(MainPageCallBackMSG msg, dynamic arg) mainPageCallback,
-      CourseLayout courseLayout) async {
+  static Future showContextSettingDialog(BuildContext context, PreferenceProvider preferenceProvider,
+      void Function(MainPageCallBackMSG msg, dynamic arg) mainPageCallback, CourseLayout courseLayout) async {
     Map prefs = await preferenceProvider.getPreferences();
     double dbNameSize = prefs[PREF_TYPE.CONFIG_NAME_SIZE].value;
     double dbRoomSize = prefs[PREF_TYPE.CONFIG_ROOM_SIZE].value;
@@ -46,17 +42,9 @@ class TimetableDialog {
           defaultRoomSize: dbRoomSize,
           defaultDayOfWeekSize: dbDayOfWeekSize,
           defaultRoomColor: dbRoomColor,
-          callback: (
-              {double nameSize,
-              double roomSize,
-              double dayOfWeekSize,
-              COLOR_MODE roomColor}) {
-            mainPageCallback(MainPageCallBackMSG.SET_CONFIG_APPEARANCE, {
-              'nameSize': nameSize,
-              'roomSize': roomSize,
-              'dayOfWeekSize': dayOfWeekSize,
-              'roomColor': roomColor
-            });
+          callback: ({double nameSize, double roomSize, double dayOfWeekSize, COLOR_MODE roomColor}) {
+            mainPageCallback(MainPageCallBackMSG.SET_CONFIG_APPEARANCE,
+                {'nameSize': nameSize, 'roomSize': roomSize, 'dayOfWeekSize': dayOfWeekSize, 'roomColor': roomColor});
             dbNameSize = nameSize ?? dbNameSize;
             dbRoomSize = roomSize ?? dbRoomSize;
             dbDayOfWeekSize = dayOfWeekSize ?? dbDayOfWeekSize;
@@ -67,8 +55,21 @@ class TimetableDialog {
     );
   }
 
-  static Future showWidgetSettingDialog(BuildContext context,
-      PreferenceProvider preferenceProvider, CourseLayout courseLayout) async {
+  static Future showSessionSettingDialog(BuildContext context, CourseLayout courseLayout) {
+    return showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => SingleChildScrollView(
+        child: _SessionSettingDialog(
+          courseLayout: courseLayout,
+          defaultSessionNames: ['A', 'B', 'C'],
+        ),
+      ),
+    );
+  }
+
+  static Future showWidgetSettingDialog(BuildContext context, PreferenceProvider preferenceProvider, CourseLayout courseLayout) async {
     Map prefs = await preferenceProvider.getPreferences();
 
     return showModalBottomSheet(
@@ -84,14 +85,9 @@ class TimetableDialog {
           defaultDayOfWeekSize: prefs[PREF_TYPE.WIDGET_WEEK_SIZE].value,
           defaultNameColor: prefs[PREF_TYPE.WIDGET_CONTEXT_COLOR].value,
           defaultDayOfWeekColor: prefs[PREF_TYPE.WIDGET_WEEK_COLOR].value,
-          defaultBackgroundOpacity:
-              (prefs[PREF_TYPE.WIDGET_CONTEXT_BACKGROUND].value as Color)
-                  .opacity,
-          defaultDayOfWeekBackground:
-              prefs[PREF_TYPE.WIDGET_WEEK_BACKGROUND].value,
-          defaultTimetableBackground:
-              (prefs[PREF_TYPE.WIDGET_CONTEXT_BACKGROUND].value as Color)
-                  .withOpacity(1),
+          defaultBackgroundOpacity: (prefs[PREF_TYPE.WIDGET_CONTEXT_BACKGROUND].value as Color).opacity,
+          defaultDayOfWeekBackground: prefs[PREF_TYPE.WIDGET_WEEK_BACKGROUND].value,
+          defaultTimetableBackground: (prefs[PREF_TYPE.WIDGET_CONTEXT_BACKGROUND].value as Color).withOpacity(1),
         ),
       ),
     );
@@ -101,11 +97,7 @@ class TimetableDialog {
 class _CourseConfigDialog extends StatefulWidget {
   final CourseLayout courseLayout;
   final Course defaultCourse;
-  _CourseConfigDialog(
-      {this.defaultCourse,
-      this.courseLayout = const CourseLayout.light(),
-      Key key})
-      : super(key: key);
+  _CourseConfigDialog({this.defaultCourse, this.courseLayout = const CourseLayout.light(), Key key}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _CourseConfigDialogState();
@@ -150,10 +142,7 @@ class _CourseConfigDialogState extends State<_CourseConfigDialog> {
               child: isTextField
                   ? TextField(
                       controller: controller,
-                      style: Theme.of(context)
-                          .textTheme
-                          .subtitle1
-                          .apply(color: widget.courseLayout.secondaryColor),
+                      style: Theme.of(context).textTheme.subtitle1.apply(color: widget.courseLayout.secondaryColor),
                       decoration: InputDecoration(
                         focusedBorder: OutlineInputBorder(
                           borderSide: BorderSide(
@@ -177,8 +166,7 @@ class _CourseConfigDialogState extends State<_CourseConfigDialog> {
                           Radius.circular(4),
                         ),
                         border: Border.all(
-                          color: Color.lerp(widget.courseLayout.primaryColor,
-                              widget.courseLayout.secondaryColor, 0.5),
+                          color: Color.lerp(widget.courseLayout.primaryColor, widget.courseLayout.secondaryColor, 0.5),
                         ),
                       ),
                       child: FlatButton(
@@ -189,11 +177,8 @@ class _CourseConfigDialogState extends State<_CourseConfigDialog> {
                           _color = await showDialog(
                                 context: context,
                                 child: AlertDialog(
-                                  backgroundColor:
-                                      widget.courseLayout.primaryColor,
-                                  content: MaterialColorPicker(_color,
-                                      courseLayout: widget.courseLayout,
-                                      onColorChanged: (newColor) {
+                                  backgroundColor: widget.courseLayout.primaryColor,
+                                  content: MaterialColorPicker(_color, courseLayout: widget.courseLayout, onColorChanged: (newColor) {
                                     newColorTemp = newColor;
                                   }),
                                   actions: [
@@ -220,19 +205,8 @@ class _CourseConfigDialogState extends State<_CourseConfigDialog> {
                           child: Padding(
                             padding: EdgeInsets.fromLTRB(4, 0, 0, 0),
                             child: Text(
-                              '#' +
-                                  _color.value
-                                      .toRadixString(16)
-                                      .padLeft(8, '0')
-                                      .substring(2)
-                                      .toUpperCase(),
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .headline6
-                                  .apply(
-                                      color: useWhiteForeground(_color)
-                                          ? Colors.white
-                                          : Colors.black),
+                              '#' + _color.value.toRadixString(16).padLeft(8, '0').substring(2).toUpperCase(),
+                              style: Theme.of(context).textTheme.headline6.apply(color: useWhiteForeground(_color) ? Colors.white : Colors.black),
                             ),
                           ),
                         ),
@@ -253,8 +227,7 @@ class _CourseConfigDialogState extends State<_CourseConfigDialog> {
         ),
       ),
       child: Padding(
-        padding: EdgeInsets.fromLTRB(
-            24, 24, 24, MediaQuery.of(context).viewInsets.bottom + 24),
+        padding: EdgeInsets.fromLTRB(24, 24, 24, MediaQuery.of(context).viewInsets.bottom + 24),
         child: Column(
           children: [
             Padding(
@@ -271,18 +244,12 @@ class _CourseConfigDialogState extends State<_CourseConfigDialog> {
                         ),
                       ),
                       onPressed: () {
-                        Course course = Course(
-                            _textEditingControllerName.value.text,
-                            room: _textEditingControllerRoom.value.text,
-                            color: _color);
+                        Course course = Course(_textEditingControllerName.value.text, room: _textEditingControllerRoom.value.text, color: _color);
                         Navigator.pop(context, course);
                       },
                       child: Text(
                         '確認',
-                        style: Theme.of(context)
-                            .textTheme
-                            .subtitle1
-                            .apply(color: Colors.white),
+                        style: Theme.of(context).textTheme.subtitle1.apply(color: Colors.white),
                       ),
                     ),
                   ),
@@ -306,11 +273,7 @@ class _ContextSettingDialog extends StatefulWidget {
   final double defaultRoomSize;
   final double defaultDayOfWeekSize;
   final COLOR_MODE defaultRoomColor;
-  final Function(
-      {double nameSize,
-      double roomSize,
-      double dayOfWeekSize,
-      COLOR_MODE roomColor}) callback;
+  final Function({double nameSize, double roomSize, double dayOfWeekSize, COLOR_MODE roomColor}) callback;
   _ContextSettingDialog(this.preferenceProvider,
       {Key key,
       this.callback,
@@ -332,8 +295,7 @@ class _ContextSettingDialogState extends State<_ContextSettingDialog> {
   COLOR_MODE roomColor = COLOR_MODE.LIGHT;
   List<bool> _isSelectedRoomColor = [true, false, false];
 
-  Widget getLabeledSlider(String title, double value,
-      Function(double) onChanged, Function(double) onChangeEnd) {
+  Widget getLabeledSlider(String title, double value, Function(double) onChanged, Function(double) onChangeEnd) {
     return Row(
       mainAxisSize: MainAxisSize.max,
       children: [
@@ -341,10 +303,7 @@ class _ContextSettingDialogState extends State<_ContextSettingDialog> {
           flex: 5,
           child: Text(
             title,
-            style: Theme.of(context)
-                .textTheme
-                .bodyText2
-                .apply(color: widget.courseLayout.secondaryColor),
+            style: Theme.of(context).textTheme.bodyText2.apply(color: widget.courseLayout.secondaryColor),
           ),
         ),
         Expanded(
@@ -363,8 +322,7 @@ class _ContextSettingDialogState extends State<_ContextSettingDialog> {
     );
   }
 
-  Widget getLabeledRadioButton(String title, COLOR_MODE color,
-      List<bool> isSelected, Function(COLOR_MODE) onChanged) {
+  Widget getLabeledRadioButton(String title, COLOR_MODE color, List<bool> isSelected, Function(COLOR_MODE) onChanged) {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -374,10 +332,7 @@ class _ContextSettingDialogState extends State<_ContextSettingDialog> {
             flex: 5,
             child: Text(
               title,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyText2
-                  .apply(color: widget.courseLayout.secondaryColor),
+              style: Theme.of(context).textTheme.bodyText2.apply(color: widget.courseLayout.secondaryColor),
             ),
           ),
           Expanded(
@@ -394,28 +349,19 @@ class _ContextSettingDialogState extends State<_ContextSettingDialog> {
                       padding: EdgeInsets.symmetric(horizontal: 8),
                       child: Text(
                         'LIGHT',
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodyText2
-                            .apply(color: widget.courseLayout.secondaryColor),
+                        style: Theme.of(context).textTheme.bodyText2.apply(color: widget.courseLayout.secondaryColor),
                       )),
                   Padding(
                       padding: EdgeInsets.symmetric(horizontal: 8),
                       child: Text(
                         'DARK',
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodyText2
-                            .apply(color: widget.courseLayout.secondaryColor),
+                        style: Theme.of(context).textTheme.bodyText2.apply(color: widget.courseLayout.secondaryColor),
                       )),
                   Padding(
                       padding: EdgeInsets.symmetric(horizontal: 8),
                       child: Text(
                         'ADAPTIVE',
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodyText2
-                            .apply(color: widget.courseLayout.secondaryColor),
+                        style: Theme.of(context).textTheme.bodyText2.apply(color: widget.courseLayout.secondaryColor),
                       )),
                 ],
                 onPressed: (index) {
@@ -456,16 +402,12 @@ class _ContextSettingDialogState extends State<_ContextSettingDialog> {
         ),
       ),
       child: Padding(
-        padding: EdgeInsets.fromLTRB(
-            24, 24, 24, MediaQuery.of(context).viewInsets.bottom + 24),
+        padding: EdgeInsets.fromLTRB(24, 24, 24, MediaQuery.of(context).viewInsets.bottom + 24),
         child: Column(
           children: [
             Text(
               'TEXT SIZE',
-              style: Theme.of(context)
-                  .textTheme
-                  .subtitle1
-                  .apply(color: widget.courseLayout.secondaryColor),
+              style: Theme.of(context).textTheme.subtitle1.apply(color: widget.courseLayout.secondaryColor),
             ),
             getLabeledSlider('DAY OF WEEK', dayOfWeekSize, (value) {
               setState(() {
@@ -473,8 +415,7 @@ class _ContextSettingDialogState extends State<_ContextSettingDialog> {
                 widget.callback(dayOfWeekSize: value);
               });
             }, (value) {
-              widget.preferenceProvider.setPreference(
-                  Preference(PREF_TYPE.CONFIG_WEEK_SIZE, value));
+              widget.preferenceProvider.setPreference(Preference(PREF_TYPE.CONFIG_WEEK_SIZE, value));
             }),
             getLabeledSlider('NAME', nameSize, (value) {
               setState(() {
@@ -482,8 +423,7 @@ class _ContextSettingDialogState extends State<_ContextSettingDialog> {
                 widget.callback(nameSize: value);
               });
             }, (value) {
-              widget.preferenceProvider.setPreference(
-                  Preference(PREF_TYPE.CONFIG_NAME_SIZE, value));
+              widget.preferenceProvider.setPreference(Preference(PREF_TYPE.CONFIG_NAME_SIZE, value));
             }),
             getLabeledSlider('ROOM', roomSize, (value) {
               setState(() {
@@ -491,26 +431,20 @@ class _ContextSettingDialogState extends State<_ContextSettingDialog> {
                 widget.callback(roomSize: value);
               });
             }, (value) {
-              widget.preferenceProvider.setPreference(
-                  Preference(PREF_TYPE.CONFIG_ROOM_SIZE, value));
+              widget.preferenceProvider.setPreference(Preference(PREF_TYPE.CONFIG_ROOM_SIZE, value));
             }),
             Container(
               height: 16,
             ),
             Text(
               'TEXT COLOR',
-              style: Theme.of(context)
-                  .textTheme
-                  .subtitle1
-                  .apply(color: widget.courseLayout.secondaryColor),
+              style: Theme.of(context).textTheme.subtitle1.apply(color: widget.courseLayout.secondaryColor),
             ),
-            getLabeledRadioButton('ROOM', roomColor, _isSelectedRoomColor,
-                (value) {
+            getLabeledRadioButton('ROOM', roomColor, _isSelectedRoomColor, (value) {
               setState(() {
                 roomColor = value;
                 widget.callback(roomColor: value);
-                widget.preferenceProvider.setPreference(
-                    Preference(PREF_TYPE.CONFIG_ROOM_COLOR, value));
+                widget.preferenceProvider.setPreference(Preference(PREF_TYPE.CONFIG_ROOM_COLOR, value));
               });
             }),
             Container(
@@ -518,10 +452,7 @@ class _ContextSettingDialogState extends State<_ContextSettingDialog> {
             ),
             Text(
               'SYNC TO GOOGLE CALENDAR',
-              style: Theme.of(context)
-                  .textTheme
-                  .subtitle1
-                  .apply(color: widget.courseLayout.secondaryColor),
+              style: Theme.of(context).textTheme.subtitle1.apply(color: widget.courseLayout.secondaryColor),
             ),
           ],
         ),
@@ -594,8 +525,7 @@ class _WidgetSettingDialogState extends State<_WidgetSettingDialog> {
     _isSelectedNameColor[COLOR_MODE.values.indexOf(nameColor)] = true;
   }
 
-  Widget getLabeledSlider(String title, double value,
-      Function(double) onChanged, Function(double) onChangeEnd) {
+  Widget getLabeledSlider(String title, double value, Function(double) onChanged, Function(double) onChangeEnd) {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -605,10 +535,7 @@ class _WidgetSettingDialogState extends State<_WidgetSettingDialog> {
             flex: 5,
             child: Text(
               title,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyText2
-                  .apply(color: widget.courseLayout.secondaryColor),
+              style: Theme.of(context).textTheme.bodyText2.apply(color: widget.courseLayout.secondaryColor),
             ),
           ),
           Expanded(
@@ -628,8 +555,7 @@ class _WidgetSettingDialogState extends State<_WidgetSettingDialog> {
     );
   }
 
-  Widget getLabeledRadioButton(String title, COLOR_MODE color,
-      List<bool> isSelected, Function(COLOR_MODE) onChanged) {
+  Widget getLabeledRadioButton(String title, COLOR_MODE color, List<bool> isSelected, Function(COLOR_MODE) onChanged) {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -639,10 +565,7 @@ class _WidgetSettingDialogState extends State<_WidgetSettingDialog> {
             flex: 5,
             child: Text(
               title,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyText2
-                  .apply(color: widget.courseLayout.secondaryColor),
+              style: Theme.of(context).textTheme.bodyText2.apply(color: widget.courseLayout.secondaryColor),
             ),
           ),
           Expanded(
@@ -659,28 +582,19 @@ class _WidgetSettingDialogState extends State<_WidgetSettingDialog> {
                       padding: EdgeInsets.symmetric(horizontal: 8),
                       child: Text(
                         'LIGHT',
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodyText2
-                            .apply(color: widget.courseLayout.secondaryColor),
+                        style: Theme.of(context).textTheme.bodyText2.apply(color: widget.courseLayout.secondaryColor),
                       )),
                   Padding(
                       padding: EdgeInsets.symmetric(horizontal: 8),
                       child: Text(
                         'DARK',
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodyText2
-                            .apply(color: widget.courseLayout.secondaryColor),
+                        style: Theme.of(context).textTheme.bodyText2.apply(color: widget.courseLayout.secondaryColor),
                       )),
                   Padding(
                       padding: EdgeInsets.symmetric(horizontal: 8),
                       child: Text(
                         'ADAPTIVE',
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodyText2
-                            .apply(color: widget.courseLayout.secondaryColor),
+                        style: Theme.of(context).textTheme.bodyText2.apply(color: widget.courseLayout.secondaryColor),
                       )),
                 ],
                 onPressed: (index) {
@@ -700,8 +614,7 @@ class _WidgetSettingDialogState extends State<_WidgetSettingDialog> {
     );
   }
 
-  Widget getLabeledColorPicker(
-      String title, Color color, Function(Color) onChanged) {
+  Widget getLabeledColorPicker(String title, Color color, Function(Color) onChanged) {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -711,10 +624,7 @@ class _WidgetSettingDialogState extends State<_WidgetSettingDialog> {
             flex: 5,
             child: Text(
               title,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyText2
-                  .apply(color: widget.courseLayout.secondaryColor),
+              style: Theme.of(context).textTheme.bodyText2.apply(color: widget.courseLayout.secondaryColor),
             ),
           ),
           Expanded(
@@ -728,8 +638,7 @@ class _WidgetSettingDialogState extends State<_WidgetSettingDialog> {
                     Radius.circular(4),
                   ),
                   border: Border.all(
-                    color: Color.lerp(widget.courseLayout.primaryColor,
-                        widget.courseLayout.secondaryColor, 0.5),
+                    color: Color.lerp(widget.courseLayout.primaryColor, widget.courseLayout.secondaryColor, 0.5),
                   ),
                 ),
                 child: FlatButton(
@@ -739,9 +648,7 @@ class _WidgetSettingDialogState extends State<_WidgetSettingDialog> {
                           context: context,
                           child: AlertDialog(
                             backgroundColor: widget.courseLayout.primaryColor,
-                            content: MaterialColorPicker(color,
-                                courseLayout: widget.courseLayout,
-                                onColorChanged: (newColor) {
+                            content: MaterialColorPicker(color, courseLayout: widget.courseLayout, onColorChanged: (newColor) {
                               newColorTemp = newColor;
                             }),
                             actions: [
@@ -770,16 +677,8 @@ class _WidgetSettingDialogState extends State<_WidgetSettingDialog> {
                       child: Padding(
                         padding: EdgeInsets.fromLTRB(4, 0, 0, 0),
                         child: Text(
-                          '#' +
-                              color.value
-                                  .toRadixString(16)
-                                  .padLeft(8, '0')
-                                  .substring(2)
-                                  .toUpperCase(),
-                          style: Theme.of(context).textTheme.headline6.apply(
-                              color: useWhiteForeground(color)
-                                  ? Colors.white
-                                  : Colors.black),
+                          '#' + color.value.toRadixString(16).padLeft(8, '0').substring(2).toUpperCase(),
+                          style: Theme.of(context).textTheme.headline6.apply(color: useWhiteForeground(color) ? Colors.white : Colors.black),
                         ),
                       ),
                     ),
@@ -803,64 +702,51 @@ class _WidgetSettingDialogState extends State<_WidgetSettingDialog> {
         ),
       ),
       child: Padding(
-        padding: EdgeInsets.fromLTRB(
-            24, 24, 24, MediaQuery.of(context).viewInsets.bottom + 24),
+        padding: EdgeInsets.fromLTRB(24, 24, 24, MediaQuery.of(context).viewInsets.bottom + 24),
         child: Column(
           children: [
             Text(
               'TEXT SIZE',
-              style: Theme.of(context)
-                  .textTheme
-                  .subtitle1
-                  .apply(color: widget.courseLayout.secondaryColor),
+              style: Theme.of(context).textTheme.subtitle1.apply(color: widget.courseLayout.secondaryColor),
             ),
             getLabeledSlider('DAY OF WEEK', dayOfWeekSize, (value) {
               setState(() {
                 dayOfWeekSize = value;
               });
             }, (value) {
-              widget.preferenceProvider.setPreference(
-                  Preference(PREF_TYPE.WIDGET_WEEK_SIZE, value));
+              widget.preferenceProvider.setPreference(Preference(PREF_TYPE.WIDGET_WEEK_SIZE, value));
             }),
             getLabeledSlider('NAME', nameSize, (value) {
               setState(() {
                 nameSize = value;
               });
             }, (value) {
-              widget.preferenceProvider.setPreference(
-                  Preference(PREF_TYPE.WIDGET_NAME_SIZE, value));
+              widget.preferenceProvider.setPreference(Preference(PREF_TYPE.WIDGET_NAME_SIZE, value));
             }),
             getLabeledSlider('ROOM', roomSize, (value) {
               setState(() {
                 roomSize = value;
               });
             }, (value) {
-              widget.preferenceProvider.setPreference(
-                  Preference(PREF_TYPE.WIDGET_ROOM_SIZE, value));
+              widget.preferenceProvider.setPreference(Preference(PREF_TYPE.WIDGET_ROOM_SIZE, value));
             }),
             Container(
               height: 16,
             ),
             Text(
               'DAY OF WEEK COLOR',
-              style: Theme.of(context)
-                  .textTheme
-                  .subtitle1
-                  .apply(color: widget.courseLayout.secondaryColor),
+              style: Theme.of(context).textTheme.subtitle1.apply(color: widget.courseLayout.secondaryColor),
             ),
-            getLabeledRadioButton(
-                'TEXT', dayOfWeekColor, _isSelectedDayOfWeekColor, (value) {
+            getLabeledRadioButton('TEXT', dayOfWeekColor, _isSelectedDayOfWeekColor, (value) {
               setState(() {
                 dayOfWeekColor = value;
-                widget.preferenceProvider.setPreference(
-                    Preference(PREF_TYPE.WIDGET_WEEK_COLOR, value));
+                widget.preferenceProvider.setPreference(Preference(PREF_TYPE.WIDGET_WEEK_COLOR, value));
               });
             }),
             getLabeledColorPicker('BACKGROUND', dayOfWeekBackground, (value) {
               setState(() {
                 dayOfWeekBackground = value;
-                widget.preferenceProvider.setPreference(
-                    Preference(PREF_TYPE.WIDGET_WEEK_BACKGROUND, value));
+                widget.preferenceProvider.setPreference(Preference(PREF_TYPE.WIDGET_WEEK_BACKGROUND, value));
               });
             }),
             Container(
@@ -868,25 +754,18 @@ class _WidgetSettingDialogState extends State<_WidgetSettingDialog> {
             ),
             Text(
               'TIMETABLE COLOR',
-              style: Theme.of(context)
-                  .textTheme
-                  .subtitle1
-                  .apply(color: widget.courseLayout.secondaryColor),
+              style: Theme.of(context).textTheme.subtitle1.apply(color: widget.courseLayout.secondaryColor),
             ),
-            getLabeledRadioButton('TEXT', nameColor, _isSelectedNameColor,
-                (value) {
+            getLabeledRadioButton('TEXT', nameColor, _isSelectedNameColor, (value) {
               setState(() {
                 dayOfWeekColor = value;
-                widget.preferenceProvider.setPreference(
-                    Preference(PREF_TYPE.WIDGET_CONTEXT_COLOR, value));
+                widget.preferenceProvider.setPreference(Preference(PREF_TYPE.WIDGET_CONTEXT_COLOR, value));
               });
             }),
             getLabeledColorPicker('BACKGROUND', timetableBackground, (value) {
               setState(() {
                 timetableBackground = value;
-                widget.preferenceProvider.setPreference(Preference(
-                    PREF_TYPE.WIDGET_CONTEXT_BACKGROUND,
-                    timetableBackground.withOpacity(backgroundOpacity)));
+                widget.preferenceProvider.setPreference(Preference(PREF_TYPE.WIDGET_CONTEXT_BACKGROUND, timetableBackground.withOpacity(backgroundOpacity)));
               });
             }),
             getLabeledSlider('OPACITY', backgroundOpacity, (value) {
@@ -894,11 +773,46 @@ class _WidgetSettingDialogState extends State<_WidgetSettingDialog> {
                 backgroundOpacity = value;
               });
             }, (value) {
-              widget.preferenceProvider.setPreference(Preference(
-                  PREF_TYPE.WIDGET_CONTEXT_BACKGROUND,
-                  timetableBackground.withOpacity(value)));
+              widget.preferenceProvider.setPreference(Preference(PREF_TYPE.WIDGET_CONTEXT_BACKGROUND, timetableBackground.withOpacity(value)));
             }),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SessionSettingDialog extends StatefulWidget {
+  final List<String> defaultSessionNames;
+  final CourseLayout courseLayout;
+  _SessionSettingDialog({Key key, this.courseLayout, this.defaultSessionNames}) : super(key: key);
+
+  @override
+  State<StatefulWidget> createState() => _SessionSettingDialogState();
+}
+
+class _SessionSettingDialogState extends State<_SessionSettingDialog> {
+  List<String> sessionNames;
+
+  @override
+  void initState() {
+    super.initState();
+    sessionNames = List.of(widget.defaultSessionNames);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: widget.courseLayout.primaryColor,
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(20),
+        ),
+      ),
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(24, 24, 24, MediaQuery.of(context).viewInsets.bottom + 24),
+        child: Column(
+          children: [for(String name in sessionNames) Text(name),],
         ),
       ),
     );

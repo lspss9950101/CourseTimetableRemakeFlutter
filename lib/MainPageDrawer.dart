@@ -68,6 +68,9 @@ class _MainPageDrawerState extends State<MainPageDrawer> {
           title: S.of(context).mainPageDrawerSessionSetting,
           titleStyle: Theme.of(context).textTheme.subtitle2,
           icon: Icons.event_note,
+          onTap: () {
+            TimetableDialog.showSessionSettingDialog(context, widget.courseLayout);
+          }
         ),
       )
       ..add(

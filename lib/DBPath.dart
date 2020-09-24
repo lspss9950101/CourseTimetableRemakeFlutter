@@ -5,7 +5,7 @@ const String COLUMN_PATH_IN_USE = 'in_use';
 const String COLUMN_PATH_NAME = 'name';
 const String COLUMN_PATH_TYPE = 'type';
 const String _TABLE_NAME = 'path';
-const int _DB_VERSION = 1;
+const int _DB_VERSION = 2;
 
 enum PATH_TYPE {
   COURSE,
@@ -29,6 +29,8 @@ class PathProvider {
         $COLUMN_PATH_IN_USE integer not null,
         $COLUMN_PATH_NAME text not null)
       ''');
+    db.insert(_TABLE_NAME, {COLUMN_PATH_NAME: 'Courses', COLUMN_PATH_TYPE: PATH_TYPE.COURSE.toString(), COLUMN_PATH_IN_USE: 1});
+    db.insert(_TABLE_NAME, {COLUMN_PATH_NAME: 'Preferences', COLUMN_PATH_TYPE: PATH_TYPE.PREF.toString(), COLUMN_PATH_IN_USE: 1});
   }
 
   void _onUpgrade(Database db, int versionOld, int version) async {
@@ -38,8 +40,9 @@ class PathProvider {
     _onCreate(db, version);
   }
 
-  void open(String path) async {
-    db = await openDatabase(path,
+  Future<void> open() async {
+    if(db != null) return;
+    db = await openDatabase('path.db',
         version: _DB_VERSION,
         onCreate: _onCreate,
         onUpgrade: _onUpgrade,
@@ -47,6 +50,7 @@ class PathProvider {
   }
 
   Future<List<Map>> getPathByType(PATH_TYPE type) async {
+    if(db == null) await open();
     return await db.query(_TABLE_NAME,
         columns: [
           _COLUMN_ID,
@@ -58,6 +62,7 @@ class PathProvider {
   }
 
   Future<Map<PATH_TYPE, String>> getPathInUse() async {
+    if(db == null) await open();
     List<Map> maps = await db.query(_TABLE_NAME, columns: [COLUMN_PATH_TYPE, COLUMN_PATH_NAME, _COLUMN_ID], where: '$COLUMN_PATH_IN_USE = ?', whereArgs: [1]);
     Map<PATH_TYPE, String> result = Map();
     for(PATH_TYPE type in PATH_TYPE.values)
@@ -66,6 +71,7 @@ class PathProvider {
   }
 
   Future<bool> createPath(PATH_TYPE type, String name) async {
+    if(db == null) await open();
     int cnt = Sqflite.firstIntValue(await db.rawQuery('''
       SELECT COUNT(*)
       FROM $_TABLE_NAME
@@ -89,6 +95,7 @@ class PathProvider {
   }
 
   void setInUse(PATH_TYPE type, String name) async {
+    if(db == null) await open();
     var batch = db.batch();
     batch.rawUpdate("""
       UPDATE $_TABLE_NAME

@@ -2,6 +2,7 @@ import 'package:course_timetable_remake/Dialog.dart';
 import 'package:course_timetable_remake/Preference.dart';
 
 import 'Course.dart';
+import 'DBPath.dart';
 import 'DBPreference.dart';
 import 'Session.dart';
 import 'Timetable.dart';
@@ -51,8 +52,7 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
   CourseProvider _courseProvider;
   PreferenceProvider _preferenceProvider;
-  String dbCoursePath = 'course.db';
-  String dbPreferencePath = 'preference.db';
+  PathProvider _pathProvider;
   bool darkMode = false;
   List<Session> sessions = List();
   List<Course> courses = List();
@@ -66,10 +66,12 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
   }
 
   Future initDB() async {
-    _courseProvider = CourseProvider();
-    _preferenceProvider = PreferenceProvider();
-    await _courseProvider.open(dbCoursePath);
-    await _preferenceProvider.open(dbPreferencePath);
+    _pathProvider = PathProvider.getInstance();
+    _courseProvider = CourseProvider.getInstance();
+    _preferenceProvider = PreferenceProvider.getInstance();
+    Map map = await _pathProvider.getPathInUse();
+    await CourseProvider.open(map[PATH_TYPE.COURSE]);
+    await PreferenceProvider.open(map[PATH_TYPE.PREF]);
 
     refreshTimetable();
 
@@ -97,6 +99,8 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _courseProvider.close();
+    _pathProvider.close();
+    _preferenceProvider.close();
     super.dispose();
   }
 
@@ -132,7 +136,6 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
         courses: courses,
         sessions: sessions,
         courseLayout: darkMode ? CourseLayout.dark() : CourseLayout.light(),
-        preferenceProvider: _preferenceProvider,
         saveCourseToDB: () async {
           await _courseProvider.setCourses(courses);
           await reloadCourse();

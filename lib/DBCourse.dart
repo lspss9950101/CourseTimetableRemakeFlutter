@@ -10,9 +10,13 @@ const String COLUMN_COURSE_COLOR = 'color';
 const int _DB_VERSION = 2;
 
 class CourseProvider {
+  static CourseProvider instance;
+
+  static CourseProvider getInstance() => instance ?? (instance = CourseProvider());
+
   Database db;
 
-  void _onCreate(Database db, int version) async {
+  static void _onCreate(Database db, int version) async {
     await db.execute('''
         create table $_TABLE_NAME (
         $_COLUMN_ID integer primary key autoincrement,
@@ -26,15 +30,17 @@ class CourseProvider {
     await batch.commit();
   }
 
-  void _onUpgrade(Database db, int versionOld, int version) async {
+  static void _onUpgrade(Database db, int versionOld, int version) async {
     await db.execute('''
         drop table if exists $_TABLE_NAME
       ''');
     _onCreate(db, version);
   }
 
-  Future open(String path) async {
-    db = await openDatabase(path, version: _DB_VERSION, onCreate: _onCreate, onUpgrade: _onUpgrade);
+  static Future open(String path) async {
+    getInstance();
+    if(instance.db != null) await instance.close();
+    instance.db = await openDatabase(path, version: _DB_VERSION, onCreate: _onCreate, onUpgrade: _onUpgrade, onDowngrade: _onUpgrade);
   }
 
   Future<List<Course>> getCourses() async {
