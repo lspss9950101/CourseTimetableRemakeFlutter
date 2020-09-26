@@ -1,3 +1,5 @@
+import 'package:course_timetable_remake/DBPreference.dart';
+import 'package:course_timetable_remake/Preference.dart';
 import 'package:sqflite/sqflite.dart';
 
 import 'Course.dart';
@@ -19,14 +21,14 @@ class CourseProvider {
   static void _onCreate(Database db, int version) async {
     await db.execute('''
         create table $_TABLE_NAME (
-        $_COLUMN_ID integer primary key autoincrement,
+        $_COLUMN_ID integer primary key,
         $COLUMN_COURSE_NAME text not null,
         $COLUMN_COURSE_ROOM text not null,
         $COLUMN_COURSE_COLOR integer not null)
       ''');
     var batch = db.batch();
     for(int i = 0; i < 7*13; i++)
-      batch.insert(_TABLE_NAME, Course.empty().toMap());
+      batch.insert(_TABLE_NAME, Course.empty().toMap()..addEntries([MapEntry(_COLUMN_ID, i+1)]));
     await batch.commit();
   }
 
@@ -51,8 +53,25 @@ class CourseProvider {
   Future setCourses(List<Course> courses) async {
     var batch = db.batch();
     batch.delete(_TABLE_NAME);
-    for(Course course in courses)
-      batch.insert(_TABLE_NAME, course.toMap());
+    courses.asMap().entries.forEach((e) {
+      batch.insert(_TABLE_NAME, e.value.toMap()
+        ..addEntries([MapEntry(_COLUMN_ID, e.key+1)]));
+    });
+    await batch.commit();
+  }
+
+  Future applySession(int sessionCnt) async {
+    int currentCnt = Sqflite.firstIntValue(await db.rawQuery("""
+    SELECT COUNT(*)
+    FROM $_TABLE_NAME
+    """));
+    var batch = db.batch();
+    while(currentCnt > sessionCnt*7) {
+      batch.delete(_TABLE_NAME, where: '$_COLUMN_ID = ?', whereArgs: [currentCnt--]);
+    }
+    while(currentCnt < sessionCnt*7) {
+      batch.insert(_TABLE_NAME, Course.empty().toMap()..addEntries([MapEntry(_COLUMN_ID, ++currentCnt)]));
+    }
     await batch.commit();
   }
   

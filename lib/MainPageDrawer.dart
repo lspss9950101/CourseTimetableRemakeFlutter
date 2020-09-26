@@ -6,7 +6,7 @@ import 'generated/l10n.dart';
 import 'package:outline_material_icons/outline_material_icons.dart';
 
 class MainPageDrawer extends StatefulWidget {
-  final void Function(MainPageCallBackMSG msg, dynamic arg) callback;
+  final void Function(MainPageCallBackMSG msg, [dynamic arg]) callback;
   final bool darkMode;
   final CourseLayout courseLayout;
   final PreferenceProvider preferenceProvider;
@@ -68,8 +68,9 @@ class _MainPageDrawerState extends State<MainPageDrawer> {
           title: S.of(context).mainPageDrawerSessionSetting,
           titleStyle: Theme.of(context).textTheme.subtitle2,
           icon: Icons.event_note,
-          onTap: () {
-            TimetableDialog.showSessionSettingDialog(context, widget.courseLayout);
+          onTap: () async {
+            await TimetableDialog.showSessionSettingDialog(context, widget.courseLayout);
+            widget.callback(MainPageCallBackMSG.SET_SESSION);
           }
         ),
       )

@@ -6,7 +6,7 @@ const String COLUMN_PREF_VALUE = 'value';
 
 const String _TABLE_NAME = 'preferences';
 const String _COLUMN_ID = '_id';
-const int _DB_VERSION = 1;
+const int _DB_VERSION = 2;
 
 class PreferenceProvider {
   static PreferenceProvider instance;
@@ -56,6 +56,16 @@ class PreferenceProvider {
   Future<Preference> getPreference(PREF_TYPE type) async {
     List<Map> maps = await db.query(_TABLE_NAME, columns: [COLUMN_PREF_TYPE, COLUMN_PREF_VALUE,], where: '$COLUMN_PREF_TYPE = ?', whereArgs: [type.toString()]);
     return Preference.fromMap(maps.first);
+  }
+
+  Future<Map<PREF_TYPE, Preference>> getPreferencesFromType(List<PREF_TYPE> types) async {
+    List<Map> maps = (await db.query(_TABLE_NAME, columns: [COLUMN_PREF_TYPE, COLUMN_PREF_VALUE])).where((pref) => types.any((type) => type.toString() == pref[COLUMN_PREF_TYPE])).toList();
+    Map<PREF_TYPE, Preference> result = Map();
+    maps.forEach((element) {
+      Preference preference = Preference.fromMap(element);
+      result[preference.type] = preference;
+    });
+    return result;
   }
 
   Future setPreference(Preference preference) async {

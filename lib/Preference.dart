@@ -39,7 +39,7 @@ COLOR_MODE _parseColorMode(String s) => COLOR_MODE.values[int.parse(s)];
 
 DateTimeRange _parseDateTimeRange(String s) => DateTimeRange(start: DateTime.parse(s.split('-')[0]), end: DateTime.parse(s.split('-')[1]));
 
-List<String> _parseStringList(String s) => s.split('\n');
+List<String> _parseStringList(String s) => s.length == 0 ? [] : s.split('\n');
 
 List<TimeOfDayRange> _parseTimeOfDayRangeList(String s) => _parseStringList(s).map((e) {
       List<int> parsedString = e.split(RegExp(r'[-:]')).map((e) => int.parse(e)).toList();

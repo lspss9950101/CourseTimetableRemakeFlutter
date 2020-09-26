@@ -1,5 +1,6 @@
 import 'package:course_timetable_remake/Dialog.dart';
 import 'package:course_timetable_remake/Preference.dart';
+import 'package:course_timetable_remake/TimeOfDayRange.dart';
 
 import 'Course.dart';
 import 'DBPath.dart';
@@ -95,6 +96,13 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
     setState(() {});
   }
 
+  Future reloadSession() async {
+    Map<PREF_TYPE, Preference> map = await _preferenceProvider.getPreferencesFromType([PREF_TYPE.SESSION_NAME, PREF_TYPE.SESSION_TIME]);
+    sessions = (map[PREF_TYPE.SESSION_NAME].value as List<String>).asMap().entries.map((e) => Session(name: e.value, timeOfDayRange: map[PREF_TYPE.SESSION_TIME].value[e.key])).toList();
+    await _courseProvider.applySession(sessions.length);
+    reloadCourse();
+  }
+
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
@@ -117,7 +125,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
         preferenceProvider: _preferenceProvider,
         courseLayout: darkMode ? CourseLayout.dark() : CourseLayout.light(),
         darkMode: darkMode,
-        callback: (msg, arg) async {
+        callback: (msg, [arg]) async {
           switch (msg) {
             case MainPageCallBackMSG.SET_DARK_MODE:
               setState(() {
@@ -128,6 +136,9 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
               break;
             case MainPageCallBackMSG.SET_CONFIG_APPEARANCE:
               refreshTimetable(nameSize: arg['nameSize'], roomSize: arg['roomSize'], dayOfWeekSize: arg['dayOfWeekSize'], roomColor: arg['roomColor'],);
+              break;
+            case MainPageCallBackMSG.SET_SESSION:
+              reloadSession();
               break;
           }
         },

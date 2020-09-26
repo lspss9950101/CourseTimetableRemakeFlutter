@@ -2,10 +2,14 @@ import 'package:course_timetable_remake/DBPreference.dart';
 import 'package:course_timetable_remake/MaterialColorPicker.dart';
 import 'package:course_timetable_remake/Preference.dart';
 import 'package:course_timetable_remake/Resources.dart';
+import 'package:course_timetable_remake/TimeOfDayRange.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:reorderables/reorderables.dart';
 
 import 'Course.dart';
+import 'Session.dart';
 
 class TimetableDialog {
   static Future<Course> showAddEditCourseDialog(BuildContext context, CourseLayout courseLayout, Course defaultCourse) {
@@ -55,16 +59,20 @@ class TimetableDialog {
     );
   }
 
-  static Future showSessionSettingDialog(BuildContext context, CourseLayout courseLayout) {
+  static Future showSessionSettingDialog(BuildContext context, CourseLayout courseLayout) async {
+    List<String> sessionNames = (await PreferenceProvider.getInstance().getPreference(PREF_TYPE.SESSION_NAME)).value;
+    List<TimeOfDayRange> sessionTimes = (await PreferenceProvider.getInstance().getPreference(PREF_TYPE.SESSION_TIME)).value;
+    List<Session> sessions = List.generate(
+      sessionNames.length,
+      (index) => Session(name: sessionNames[index], timeOfDayRange: sessionTimes[index]),
+    );
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => SingleChildScrollView(
-        child: _SessionSettingDialog(
-          courseLayout: courseLayout,
-          defaultSessionNames: ['A', 'B', 'C'],
-        ),
+      builder: (context) => _SessionSettingDialog(
+        courseLayout: courseLayout,
+        defaultSessions: sessions,
       ),
     );
   }
@@ -783,26 +791,77 @@ class _WidgetSettingDialogState extends State<_WidgetSettingDialog> {
 }
 
 class _SessionSettingDialog extends StatefulWidget {
-  final List<String> defaultSessionNames;
+  final List<Session> defaultSessions;
   final CourseLayout courseLayout;
-  _SessionSettingDialog({Key key, this.courseLayout, this.defaultSessionNames}) : super(key: key);
+  _SessionSettingDialog({Key key, this.courseLayout, this.defaultSessions}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _SessionSettingDialogState();
 }
 
 class _SessionSettingDialogState extends State<_SessionSettingDialog> {
-  List<String> sessionNames;
+  List<Session> sessions;
+
+  Future _saveToDB() async {
+    List<String> name = sessions.map((e) => e.name).toList();
+    List<TimeOfDayRange> time = sessions.map((e) => e.timeOfDayRange).toList();
+    await PreferenceProvider.getInstance().setPreferences([Preference(PREF_TYPE.SESSION_NAME, name), Preference(PREF_TYPE.SESSION_TIME, time),]);
+  }
 
   @override
   void initState() {
     super.initState();
-    sessionNames = List.of(widget.defaultSessionNames);
+    sessions = List.of(widget.defaultSessions);
+  }
+
+  Widget getSessionRow(Session session, GestureTapCallback onTap, Function(DismissDirection) onSwiped) {
+    Widget child = GestureDetector(
+      onTap: onTap,
+      child: Padding(
+        key: Key(session.hashCode.toString()),
+        padding: EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+        child: Container(
+          height: 50,
+          decoration: BoxDecoration(
+            color: Color.lerp(widget.courseLayout.primaryColor, Colors.white, 0.15),
+            boxShadow: [
+              BoxShadow(color: Color.fromARGB(200, 70, 70, 70), blurRadius: 3),
+            ],
+          ),
+          child: Align(
+            alignment: Alignment.center,
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Expanded(
+                    child: Text(
+                      session.name,
+                      style: Theme.of(context).textTheme.headline6.apply(color: widget.courseLayout.secondaryColor),
+                    ),
+                  ),
+                  Flexible(
+                    child: Text(
+                      session.timeOfDayRange.toString(),
+                      style: Theme.of(context).textTheme.headline6.apply(color: widget.courseLayout.secondaryColor),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    return Dismissible(key: Key(session.hashCode.toString()), child: child, onDismissed: onSwiped,);
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      height: MediaQuery.of(context).size.height * 0.8,
       decoration: BoxDecoration(
         color: widget.courseLayout.primaryColor,
         borderRadius: BorderRadius.vertical(
@@ -810,10 +869,283 @@ class _SessionSettingDialogState extends State<_SessionSettingDialog> {
         ),
       ),
       child: Padding(
-        padding: EdgeInsets.fromLTRB(24, 24, 24, MediaQuery.of(context).viewInsets.bottom + 24),
-        child: Column(
-          children: [for(String name in sessionNames) Text(name),],
+        padding: EdgeInsets.fromLTRB(24, 48, 24, MediaQuery.of(context).viewInsets.bottom + 24),
+        child: ScrollConfiguration(
+          behavior: _ScrollBehaviour(),
+          child: ReorderableColumn(
+            onReorder: (int oldIndex, int newIndex) {
+              setState(() {
+                Session t = sessions.removeAt(oldIndex);
+                sessions.insert(newIndex, t);
+              });
+            },
+            children: [
+              for (Session session in sessions)
+                getSessionRow(
+                  session,
+                  () async {
+                    await showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        backgroundColor: widget.courseLayout.primaryColor,
+                        content: _SessionConfigDialog(
+                          courseLayout: widget.courseLayout,
+                          session: session,
+                        ),
+                      ),
+                    );
+                    await _saveToDB();
+                    setState(() {});
+                  },
+                  (_) async {
+                    sessions.remove(session);
+                    await _saveToDB();
+                    setState(() {
+                    });
+                  },
+                ),
+            ],
+            buildDraggableFeedback: (context, constraints, child) => Material(
+              child: ConstrainedBox(
+                constraints: constraints,
+                child: Container(
+                    decoration: BoxDecoration(
+                      boxShadow: [
+                        BoxShadow(
+                          color: Color.fromARGB(50, 30, 30, 30),
+                          blurRadius: 4,
+                          spreadRadius: 1,
+                        ),
+                      ],
+                    ),
+                    child: child),
+              ),
+              color: Colors.transparent,
+            ),
+            footer: Padding(
+              padding: EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+              child: GestureDetector(
+                onTap: () async {
+                  Session newSession = Session.dummy();
+                  bool status = await showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      backgroundColor: widget.courseLayout.primaryColor,
+                      content: _SessionConfigDialog(
+                        courseLayout: widget.courseLayout,
+                        session: newSession,
+                      ),
+                      actions: [
+                        FlatButton(
+                          onPressed: () {
+                            Navigator.pop(context, false);
+                          },
+                          child: Text(
+                            'Cancel',
+                            style: Theme.of(context).textTheme.subtitle1.apply(color: widget.courseLayout.secondaryColor),
+                          ),
+                        ),
+                        FlatButton(
+                          onPressed: () {
+                            Navigator.pop(context, true);
+                          },
+                          child: Text(
+                            'CONFIRM',
+                            style: Theme.of(context).textTheme.subtitle1.apply(color: widget.courseLayout.secondaryColor),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (status ?? false)
+                    setState(() {
+                      sessions.add(newSession);
+                      _saveToDB();
+                    });
+                },
+                child: Container(
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: Color.lerp(widget.courseLayout.primaryColor, Colors.white, 0.15),
+                    boxShadow: [
+                      BoxShadow(color: Color.fromARGB(200, 70, 70, 70), blurRadius: 2),
+                    ],
+                  ),
+                  width: double.infinity,
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Expanded(
+                          child: Icon(
+                            Icons.add_circle_outline,
+                            color: widget.courseLayout.secondaryColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
         ),
+      ),
+    );
+  }
+}
+
+class _ScrollBehaviour extends ScrollBehavior {
+  @override
+  Widget buildViewportChrome(BuildContext context, Widget child, AxisDirection axisDirection) {
+    return child;
+  }
+}
+
+class _SessionConfigDialog extends StatefulWidget {
+  final Session session;
+  final CourseLayout courseLayout;
+  _SessionConfigDialog({Key key, this.courseLayout, this.session}) : super(key: key);
+
+  @override
+  State<StatefulWidget> createState() => _SessionConfigDialogState();
+}
+
+class _SessionConfigDialogState extends State<_SessionConfigDialog> {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 75,
+      child: Row(
+        children: [
+          Expanded(
+            child: FlatButton(
+              child: SizedBox(
+                width: double.infinity,
+                child: Text(
+                  widget.session.name,
+                  textAlign: TextAlign.start,
+                  style: Theme.of(context).textTheme.headline6.apply(color: widget.courseLayout.secondaryColor),
+                ),
+              ),
+              onPressed: () async {
+                TextEditingController textEditingController = TextEditingController();
+                String newName = await showDialog(
+                  context: context,
+                  child: AlertDialog(
+                    backgroundColor: widget.courseLayout.primaryColor,
+                    content: _TextInputDialog(
+                      textEditingController: textEditingController,
+                      defaultValue: widget.session.name,
+                      courseLayout: widget.courseLayout,
+                    ),
+                    actions: [
+                      FlatButton(onPressed: () {Navigator.pop(context);}, child: Text('Cancel', style: Theme.of(context).textTheme.subtitle1.apply(color: widget.courseLayout.secondaryColor),),),
+                      FlatButton(onPressed: () {Navigator.pop(context, textEditingController.text);}, child: Text('CONFIRM', style: Theme.of(context).textTheme.subtitle1.apply(color: widget.courseLayout.secondaryColor)),),
+                    ],
+                  ),
+                );
+                setState(() {
+                  widget.session.name = newName ?? widget.session.name;
+                });
+              },
+            ),
+          ),
+          Flexible(
+            child: FlatButton(
+              onPressed: () async {
+                TimeOfDay time = await showTimePicker(
+                  context: context,
+                  initialTime: widget.session.timeOfDayRange.start,
+                  helpText: "SELECT TIME",
+                  cancelText: "Cancel",
+                  confirmText: "CONFIRM",
+                );
+                if (time != null)
+                  setState(() {
+                    widget.session.timeOfDayRange.start = time;
+                  });
+              },
+              child: Text(
+                widget.session.timeOfDayRange.start.toFormattedString(),
+                softWrap: false,
+                style: Theme.of(context).textTheme.headline6.apply(color: widget.courseLayout.secondaryColor),
+              ),
+            ),
+          ),
+          Text(
+            " - ",
+            style: Theme.of(context).textTheme.headline6.apply(color: widget.courseLayout.secondaryColor),
+          ),
+          Flexible(
+            child: FlatButton(
+              onPressed: () async {
+                TimeOfDay time = await showTimePicker(
+                    context: context, initialTime: widget.session.timeOfDayRange.end, helpText: "SELECT TIME", cancelText: "Cancel", confirmText: "CONFIRM");
+                if (time != null)
+                  setState(() {
+                    widget.session.timeOfDayRange.end = time;
+                  });
+              },
+              child: Text(
+                widget.session.timeOfDayRange.end.toFormattedString(),
+                softWrap: false,
+                style: Theme.of(context).textTheme.headline6.apply(color: widget.courseLayout.secondaryColor),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TextInputDialog extends StatefulWidget {
+  final CourseLayout courseLayout;
+  final String defaultValue;
+  final TextEditingController textEditingController;
+  _TextInputDialog({Key key, this.textEditingController, this.defaultValue, this.courseLayout}) : super(key: key);
+
+  @override
+  State<StatefulWidget> createState() => _TextInputDialogState();
+}
+
+class _TextInputDialogState extends State<_TextInputDialog> {
+  @override
+  void initState() {
+    super.initState();
+    widget.textEditingController.text = widget.defaultValue;
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    widget.textEditingController.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      child: TextField(
+        controller: widget.textEditingController,
+        decoration: InputDecoration(
+          focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(
+              color: widget.courseLayout.secondaryColor,
+            ),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderSide: BorderSide(
+              color: Color.lerp(
+                widget.courseLayout.primaryColor,
+                widget.courseLayout.secondaryColor,
+                0.5,
+              ),
+            ),
+          ),
+        ),
+        style: Theme.of(context).textTheme.headline6.apply(color: widget.courseLayout.secondaryColor),
       ),
     );
   }

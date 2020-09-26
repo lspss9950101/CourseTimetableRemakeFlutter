@@ -8,6 +8,7 @@ class Resources {
     primarySwatch: Colors.deepPurple,
     accentColor: Colors.purpleAccent,
     iconTheme: IconThemeData(color: Color.fromARGB(255, 70, 70, 70)),
+    canvasColor: Colors.transparent,
   );
 }
 
@@ -21,4 +22,5 @@ class CourseLayout {
 enum MainPageCallBackMSG {
   SET_DARK_MODE,
   SET_CONFIG_APPEARANCE,
+  SET_SESSION,
 }
