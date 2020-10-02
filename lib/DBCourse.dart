@@ -1,15 +1,21 @@
-import 'package:course_timetable_remake/DBPreference.dart';
-import 'package:course_timetable_remake/Preference.dart';
+import 'Preference.dart';
+import 'TimeOfDayRange.dart';
 import 'package:sqflite/sqflite.dart';
 
 import 'Course.dart';
+import 'Session.dart';
 
 const String _TABLE_NAME = 'courses';
+const String _TABLE_NAME_SESSION = 'sessions';
 const String _COLUMN_ID = '_id';
 const String COLUMN_COURSE_NAME = 'name';
 const String COLUMN_COURSE_ROOM = 'room';
 const String COLUMN_COURSE_COLOR = 'color';
-const int _DB_VERSION = 2;
+
+const String COLUMN_PREF_TYPE = 'type';
+const String COLUMN_PREF_VALUE = 'value';
+
+const int _DB_VERSION = 300;
 
 class CourseProvider {
   static CourseProvider instance;
@@ -26,15 +32,26 @@ class CourseProvider {
         $COLUMN_COURSE_ROOM text not null,
         $COLUMN_COURSE_COLOR integer not null)
       ''');
+    await db.execute('''
+        create table $_TABLE_NAME_SESSION (
+        $_COLUMN_ID integer primary key,
+        $COLUMN_PREF_TYPE text not null,
+        $COLUMN_PREF_VALUE text not null)
+    ''');
     var batch = db.batch();
     for(int i = 0; i < 7*13; i++)
       batch.insert(_TABLE_NAME, Course.empty().toMap()..addEntries([MapEntry(_COLUMN_ID, i+1)]));
+    batch.insert(_TABLE_NAME_SESSION, Preference.byDefault(PREF_TYPE.SESSION_NAME).toMap());
+    batch.insert(_TABLE_NAME_SESSION, Preference.byDefault(PREF_TYPE.SESSION_TIME).toMap());
     await batch.commit();
   }
 
   static void _onUpgrade(Database db, int versionOld, int version) async {
     await db.execute('''
         drop table if exists $_TABLE_NAME
+      ''');
+    await db.execute('''
+        drop table if exists $_TABLE_NAME_SESSION
       ''');
     _onCreate(db, version);
   }
@@ -58,6 +75,20 @@ class CourseProvider {
         ..addEntries([MapEntry(_COLUMN_ID, e.key+1)]));
     });
     await batch.commit();
+  }
+
+  Future<List<Session>> getSessions() async {
+    List<Preference> prefs = (await db.query(_TABLE_NAME_SESSION, columns: [COLUMN_PREF_TYPE, COLUMN_PREF_VALUE])).map((e) => Preference.fromMap(e)).toList();
+    Preference name = prefs.firstWhere((element) => element.type==PREF_TYPE.SESSION_NAME);
+    Preference value = prefs.firstWhere((element) => element.type==PREF_TYPE.SESSION_TIME);
+    return List.generate(name.value.length, (index) => Session(name: name.value[index], timeOfDayRange: value.value[index]));
+  }
+
+  Future setSessions(List<Session> sessions) async {
+    List<String> names = sessions.map((e) => e.name).toList();
+    List<TimeOfDayRange> times = sessions.map((e) => e.timeOfDayRange).toList();
+    await db.update(_TABLE_NAME_SESSION, Preference(PREF_TYPE.SESSION_NAME, names).toMap(), where: '$COLUMN_PREF_TYPE = ?', whereArgs: [PREF_TYPE.SESSION_NAME.toString()]);
+    await db.update(_TABLE_NAME_SESSION, Preference(PREF_TYPE.SESSION_TIME, times).toMap(), where: '$COLUMN_PREF_TYPE = ?', whereArgs: [PREF_TYPE.SESSION_TIME.toString()]);
   }
 
   Future applySession(int sessionCnt) async {

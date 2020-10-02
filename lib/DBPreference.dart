@@ -6,7 +6,7 @@ const String COLUMN_PREF_VALUE = 'value';
 
 const String _TABLE_NAME = 'preferences';
 const String _COLUMN_ID = '_id';
-const int _DB_VERSION = 2;
+const int _DB_VERSION = 200;
 
 class PreferenceProvider {
   static PreferenceProvider instance;
@@ -26,7 +26,8 @@ class PreferenceProvider {
       ''');
     var batch = db.batch();
     for(PREF_TYPE prefType in PREF_TYPE.values)
-      batch.insert(_TABLE_NAME, Preference.byDefault(prefType).toMap());
+      if(prefType != PREF_TYPE.SESSION_NAME && prefType != PREF_TYPE.SESSION_TIME)
+        batch.insert(_TABLE_NAME, Preference.byDefault(prefType).toMap());
     await batch.commit();
   }
 

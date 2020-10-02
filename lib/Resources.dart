@@ -23,4 +23,5 @@ enum MainPageCallBackMSG {
   SET_DARK_MODE,
   SET_CONFIG_APPEARANCE,
   SET_SESSION,
+  RELOAD_DB,
 }

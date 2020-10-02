@@ -1,8 +1,11 @@
-import 'package:course_timetable_remake/DBPreference.dart';
-import 'package:course_timetable_remake/MaterialColorPicker.dart';
-import 'package:course_timetable_remake/Preference.dart';
-import 'package:course_timetable_remake/Resources.dart';
-import 'package:course_timetable_remake/TimeOfDayRange.dart';
+import 'package:course_timetable_remake/DBCourse.dart';
+
+import 'DBPath.dart';
+import 'DBPreference.dart';
+import 'MaterialColorPicker.dart';
+import 'Preference.dart';
+import 'Resources.dart';
+import 'TimeOfDayRange.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
@@ -12,7 +15,8 @@ import 'Course.dart';
 import 'Session.dart';
 
 class TimetableDialog {
-  static Future<Course> showAddEditCourseDialog(BuildContext context, CourseLayout courseLayout, Course defaultCourse) {
+  static Future<Course> showAddEditCourseDialog(
+      BuildContext context, CourseLayout courseLayout, Course defaultCourse) {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -26,9 +30,11 @@ class TimetableDialog {
     );
   }
 
-  static Future showContextSettingDialog(BuildContext context, PreferenceProvider preferenceProvider,
-      void Function(MainPageCallBackMSG msg, dynamic arg) mainPageCallback, CourseLayout courseLayout) async {
-    Map prefs = await preferenceProvider.getPreferences();
+  static Future showContextSettingDialog(
+      BuildContext context,
+      void Function(MainPageCallBackMSG msg, dynamic arg) mainPageCallback,
+      CourseLayout courseLayout) async {
+    Map prefs = await PreferenceProvider.getInstance().getPreferences();
     double dbNameSize = prefs[PREF_TYPE.CONFIG_NAME_SIZE].value;
     double dbRoomSize = prefs[PREF_TYPE.CONFIG_ROOM_SIZE].value;
     double dbDayOfWeekSize = prefs[PREF_TYPE.CONFIG_WEEK_SIZE].value;
@@ -40,15 +46,22 @@ class TimetableDialog {
       backgroundColor: Colors.transparent,
       builder: (context) => SingleChildScrollView(
         child: _ContextSettingDialog(
-          preferenceProvider,
           courseLayout: courseLayout,
           defaultNameSize: dbNameSize,
           defaultRoomSize: dbRoomSize,
           defaultDayOfWeekSize: dbDayOfWeekSize,
           defaultRoomColor: dbRoomColor,
-          callback: ({double nameSize, double roomSize, double dayOfWeekSize, COLOR_MODE roomColor}) {
-            mainPageCallback(MainPageCallBackMSG.SET_CONFIG_APPEARANCE,
-                {'nameSize': nameSize, 'roomSize': roomSize, 'dayOfWeekSize': dayOfWeekSize, 'roomColor': roomColor});
+          callback: (
+              {double nameSize,
+              double roomSize,
+              double dayOfWeekSize,
+              COLOR_MODE roomColor}) {
+            mainPageCallback(MainPageCallBackMSG.SET_CONFIG_APPEARANCE, {
+              'nameSize': nameSize,
+              'roomSize': roomSize,
+              'dayOfWeekSize': dayOfWeekSize,
+              'roomColor': roomColor
+            });
             dbNameSize = nameSize ?? dbNameSize;
             dbRoomSize = roomSize ?? dbRoomSize;
             dbDayOfWeekSize = dayOfWeekSize ?? dbDayOfWeekSize;
@@ -59,13 +72,24 @@ class TimetableDialog {
     );
   }
 
-  static Future showSessionSettingDialog(BuildContext context, CourseLayout courseLayout) async {
-    List<String> sessionNames = (await PreferenceProvider.getInstance().getPreference(PREF_TYPE.SESSION_NAME)).value;
-    List<TimeOfDayRange> sessionTimes = (await PreferenceProvider.getInstance().getPreference(PREF_TYPE.SESSION_TIME)).value;
-    List<Session> sessions = List.generate(
-      sessionNames.length,
-      (index) => Session(name: sessionNames[index], timeOfDayRange: sessionTimes[index]),
+  static Future showPathConfigDialog(
+      BuildContext context, CourseLayout courseLayout,
+      [Function(MainPageCallBackMSG, [dynamic]) callback,]) async {
+
+    return showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _PathConfigDialog(
+        callback: callback,
+        courseLayout: courseLayout,
+      ),
     );
+  }
+
+  static Future showSessionSettingDialog(
+      BuildContext context, CourseLayout courseLayout) async {
+    List<Session> sessions = await CourseProvider.getInstance().getSessions();
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -77,8 +101,9 @@ class TimetableDialog {
     );
   }
 
-  static Future showWidgetSettingDialog(BuildContext context, PreferenceProvider preferenceProvider, CourseLayout courseLayout) async {
-    Map prefs = await preferenceProvider.getPreferences();
+  static Future showWidgetSettingDialog(
+      BuildContext context, CourseLayout courseLayout) async {
+    Map prefs = await PreferenceProvider.getInstance().getPreferences();
 
     return showModalBottomSheet(
       context: context,
@@ -86,16 +111,20 @@ class TimetableDialog {
       backgroundColor: Colors.transparent,
       builder: (context) => SingleChildScrollView(
         child: _WidgetSettingDialog(
-          preferenceProvider,
           courseLayout: courseLayout,
           defaultNameSize: prefs[PREF_TYPE.WIDGET_NAME_SIZE].value,
           defaultRoomSize: prefs[PREF_TYPE.WIDGET_ROOM_SIZE].value,
           defaultDayOfWeekSize: prefs[PREF_TYPE.WIDGET_WEEK_SIZE].value,
           defaultNameColor: prefs[PREF_TYPE.WIDGET_CONTEXT_COLOR].value,
           defaultDayOfWeekColor: prefs[PREF_TYPE.WIDGET_WEEK_COLOR].value,
-          defaultBackgroundOpacity: (prefs[PREF_TYPE.WIDGET_CONTEXT_BACKGROUND].value as Color).opacity,
-          defaultDayOfWeekBackground: prefs[PREF_TYPE.WIDGET_WEEK_BACKGROUND].value,
-          defaultTimetableBackground: (prefs[PREF_TYPE.WIDGET_CONTEXT_BACKGROUND].value as Color).withOpacity(1),
+          defaultBackgroundOpacity:
+              (prefs[PREF_TYPE.WIDGET_CONTEXT_BACKGROUND].value as Color)
+                  .opacity,
+          defaultDayOfWeekBackground:
+              prefs[PREF_TYPE.WIDGET_WEEK_BACKGROUND].value,
+          defaultTimetableBackground:
+              (prefs[PREF_TYPE.WIDGET_CONTEXT_BACKGROUND].value as Color)
+                  .withOpacity(1),
         ),
       ),
     );
@@ -105,7 +134,11 @@ class TimetableDialog {
 class _CourseConfigDialog extends StatefulWidget {
   final CourseLayout courseLayout;
   final Course defaultCourse;
-  _CourseConfigDialog({this.defaultCourse, this.courseLayout = const CourseLayout.light(), Key key}) : super(key: key);
+  _CourseConfigDialog(
+      {this.defaultCourse,
+      this.courseLayout = const CourseLayout.light(),
+      Key key})
+      : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _CourseConfigDialogState();
@@ -150,7 +183,10 @@ class _CourseConfigDialogState extends State<_CourseConfigDialog> {
               child: isTextField
                   ? TextField(
                       controller: controller,
-                      style: Theme.of(context).textTheme.subtitle1.apply(color: widget.courseLayout.secondaryColor),
+                      style: Theme.of(context)
+                          .textTheme
+                          .subtitle1
+                          .apply(color: widget.courseLayout.secondaryColor),
                       decoration: InputDecoration(
                         focusedBorder: OutlineInputBorder(
                           borderSide: BorderSide(
@@ -174,7 +210,8 @@ class _CourseConfigDialogState extends State<_CourseConfigDialog> {
                           Radius.circular(4),
                         ),
                         border: Border.all(
-                          color: Color.lerp(widget.courseLayout.primaryColor, widget.courseLayout.secondaryColor, 0.5),
+                          color: Color.lerp(widget.courseLayout.primaryColor,
+                              widget.courseLayout.secondaryColor, 0.5),
                         ),
                       ),
                       child: FlatButton(
@@ -185,8 +222,11 @@ class _CourseConfigDialogState extends State<_CourseConfigDialog> {
                           _color = await showDialog(
                                 context: context,
                                 child: AlertDialog(
-                                  backgroundColor: widget.courseLayout.primaryColor,
-                                  content: MaterialColorPicker(_color, courseLayout: widget.courseLayout, onColorChanged: (newColor) {
+                                  backgroundColor:
+                                      widget.courseLayout.primaryColor,
+                                  content: MaterialColorPicker(_color,
+                                      courseLayout: widget.courseLayout,
+                                      onColorChanged: (newColor) {
                                     newColorTemp = newColor;
                                   }),
                                   actions: [
@@ -213,8 +253,19 @@ class _CourseConfigDialogState extends State<_CourseConfigDialog> {
                           child: Padding(
                             padding: EdgeInsets.fromLTRB(4, 0, 0, 0),
                             child: Text(
-                              '#' + _color.value.toRadixString(16).padLeft(8, '0').substring(2).toUpperCase(),
-                              style: Theme.of(context).textTheme.headline6.apply(color: useWhiteForeground(_color) ? Colors.white : Colors.black),
+                              '#' +
+                                  _color.value
+                                      .toRadixString(16)
+                                      .padLeft(8, '0')
+                                      .substring(2)
+                                      .toUpperCase(),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .headline6
+                                  .apply(
+                                      color: useWhiteForeground(_color)
+                                          ? Colors.white
+                                          : Colors.black),
                             ),
                           ),
                         ),
@@ -235,7 +286,8 @@ class _CourseConfigDialogState extends State<_CourseConfigDialog> {
         ),
       ),
       child: Padding(
-        padding: EdgeInsets.fromLTRB(24, 24, 24, MediaQuery.of(context).viewInsets.bottom + 24),
+        padding: EdgeInsets.fromLTRB(
+            24, 24, 24, MediaQuery.of(context).viewInsets.bottom + 24),
         child: Column(
           children: [
             Padding(
@@ -252,12 +304,18 @@ class _CourseConfigDialogState extends State<_CourseConfigDialog> {
                         ),
                       ),
                       onPressed: () {
-                        Course course = Course(_textEditingControllerName.value.text, room: _textEditingControllerRoom.value.text, color: _color);
+                        Course course = Course(
+                            _textEditingControllerName.value.text,
+                            room: _textEditingControllerRoom.value.text,
+                            color: _color);
                         Navigator.pop(context, course);
                       },
                       child: Text(
                         '確認',
-                        style: Theme.of(context).textTheme.subtitle1.apply(color: Colors.white),
+                        style: Theme.of(context)
+                            .textTheme
+                            .subtitle1
+                            .apply(color: Colors.white),
                       ),
                     ),
                   ),
@@ -276,13 +334,16 @@ class _CourseConfigDialogState extends State<_CourseConfigDialog> {
 
 class _ContextSettingDialog extends StatefulWidget {
   final CourseLayout courseLayout;
-  final PreferenceProvider preferenceProvider;
   final double defaultNameSize;
   final double defaultRoomSize;
   final double defaultDayOfWeekSize;
   final COLOR_MODE defaultRoomColor;
-  final Function({double nameSize, double roomSize, double dayOfWeekSize, COLOR_MODE roomColor}) callback;
-  _ContextSettingDialog(this.preferenceProvider,
+  final Function(
+      {double nameSize,
+      double roomSize,
+      double dayOfWeekSize,
+      COLOR_MODE roomColor}) callback;
+  _ContextSettingDialog(
       {Key key,
       this.callback,
       this.defaultRoomColor = COLOR_MODE.LIGHT,
@@ -303,7 +364,8 @@ class _ContextSettingDialogState extends State<_ContextSettingDialog> {
   COLOR_MODE roomColor = COLOR_MODE.LIGHT;
   List<bool> _isSelectedRoomColor = [true, false, false];
 
-  Widget getLabeledSlider(String title, double value, Function(double) onChanged, Function(double) onChangeEnd) {
+  Widget getLabeledSlider(String title, double value,
+      Function(double) onChanged, Function(double) onChangeEnd) {
     return Row(
       mainAxisSize: MainAxisSize.max,
       children: [
@@ -311,7 +373,10 @@ class _ContextSettingDialogState extends State<_ContextSettingDialog> {
           flex: 5,
           child: Text(
             title,
-            style: Theme.of(context).textTheme.bodyText2.apply(color: widget.courseLayout.secondaryColor),
+            style: Theme.of(context)
+                .textTheme
+                .bodyText2
+                .apply(color: widget.courseLayout.secondaryColor),
           ),
         ),
         Expanded(
@@ -330,7 +395,8 @@ class _ContextSettingDialogState extends State<_ContextSettingDialog> {
     );
   }
 
-  Widget getLabeledRadioButton(String title, COLOR_MODE color, List<bool> isSelected, Function(COLOR_MODE) onChanged) {
+  Widget getLabeledRadioButton(String title, COLOR_MODE color,
+      List<bool> isSelected, Function(COLOR_MODE) onChanged) {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -340,7 +406,10 @@ class _ContextSettingDialogState extends State<_ContextSettingDialog> {
             flex: 5,
             child: Text(
               title,
-              style: Theme.of(context).textTheme.bodyText2.apply(color: widget.courseLayout.secondaryColor),
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyText2
+                  .apply(color: widget.courseLayout.secondaryColor),
             ),
           ),
           Expanded(
@@ -357,19 +426,28 @@ class _ContextSettingDialogState extends State<_ContextSettingDialog> {
                       padding: EdgeInsets.symmetric(horizontal: 8),
                       child: Text(
                         'LIGHT',
-                        style: Theme.of(context).textTheme.bodyText2.apply(color: widget.courseLayout.secondaryColor),
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyText2
+                            .apply(color: widget.courseLayout.secondaryColor),
                       )),
                   Padding(
                       padding: EdgeInsets.symmetric(horizontal: 8),
                       child: Text(
                         'DARK',
-                        style: Theme.of(context).textTheme.bodyText2.apply(color: widget.courseLayout.secondaryColor),
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyText2
+                            .apply(color: widget.courseLayout.secondaryColor),
                       )),
                   Padding(
                       padding: EdgeInsets.symmetric(horizontal: 8),
                       child: Text(
                         'ADAPTIVE',
-                        style: Theme.of(context).textTheme.bodyText2.apply(color: widget.courseLayout.secondaryColor),
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyText2
+                            .apply(color: widget.courseLayout.secondaryColor),
                       )),
                 ],
                 onPressed: (index) {
@@ -410,12 +488,16 @@ class _ContextSettingDialogState extends State<_ContextSettingDialog> {
         ),
       ),
       child: Padding(
-        padding: EdgeInsets.fromLTRB(24, 24, 24, MediaQuery.of(context).viewInsets.bottom + 24),
+        padding: EdgeInsets.fromLTRB(
+            24, 24, 24, MediaQuery.of(context).viewInsets.bottom + 24),
         child: Column(
           children: [
             Text(
               'TEXT SIZE',
-              style: Theme.of(context).textTheme.subtitle1.apply(color: widget.courseLayout.secondaryColor),
+              style: Theme.of(context)
+                  .textTheme
+                  .subtitle1
+                  .apply(color: widget.courseLayout.secondaryColor),
             ),
             getLabeledSlider('DAY OF WEEK', dayOfWeekSize, (value) {
               setState(() {
@@ -423,7 +505,8 @@ class _ContextSettingDialogState extends State<_ContextSettingDialog> {
                 widget.callback(dayOfWeekSize: value);
               });
             }, (value) {
-              widget.preferenceProvider.setPreference(Preference(PREF_TYPE.CONFIG_WEEK_SIZE, value));
+              PreferenceProvider.getInstance()
+                  .setPreference(Preference(PREF_TYPE.CONFIG_WEEK_SIZE, value));
             }),
             getLabeledSlider('NAME', nameSize, (value) {
               setState(() {
@@ -431,7 +514,8 @@ class _ContextSettingDialogState extends State<_ContextSettingDialog> {
                 widget.callback(nameSize: value);
               });
             }, (value) {
-              widget.preferenceProvider.setPreference(Preference(PREF_TYPE.CONFIG_NAME_SIZE, value));
+              PreferenceProvider.getInstance()
+                  .setPreference(Preference(PREF_TYPE.CONFIG_NAME_SIZE, value));
             }),
             getLabeledSlider('ROOM', roomSize, (value) {
               setState(() {
@@ -439,20 +523,26 @@ class _ContextSettingDialogState extends State<_ContextSettingDialog> {
                 widget.callback(roomSize: value);
               });
             }, (value) {
-              widget.preferenceProvider.setPreference(Preference(PREF_TYPE.CONFIG_ROOM_SIZE, value));
+              PreferenceProvider.getInstance()
+                  .setPreference(Preference(PREF_TYPE.CONFIG_ROOM_SIZE, value));
             }),
             Container(
               height: 16,
             ),
             Text(
               'TEXT COLOR',
-              style: Theme.of(context).textTheme.subtitle1.apply(color: widget.courseLayout.secondaryColor),
+              style: Theme.of(context)
+                  .textTheme
+                  .subtitle1
+                  .apply(color: widget.courseLayout.secondaryColor),
             ),
-            getLabeledRadioButton('ROOM', roomColor, _isSelectedRoomColor, (value) {
+            getLabeledRadioButton('ROOM', roomColor, _isSelectedRoomColor,
+                (value) {
               setState(() {
                 roomColor = value;
                 widget.callback(roomColor: value);
-                widget.preferenceProvider.setPreference(Preference(PREF_TYPE.CONFIG_ROOM_COLOR, value));
+                PreferenceProvider.getInstance().setPreference(
+                    Preference(PREF_TYPE.CONFIG_ROOM_COLOR, value));
               });
             }),
             Container(
@@ -460,7 +550,10 @@ class _ContextSettingDialogState extends State<_ContextSettingDialog> {
             ),
             Text(
               'SYNC TO GOOGLE CALENDAR',
-              style: Theme.of(context).textTheme.subtitle1.apply(color: widget.courseLayout.secondaryColor),
+              style: Theme.of(context)
+                  .textTheme
+                  .subtitle1
+                  .apply(color: widget.courseLayout.secondaryColor),
             ),
           ],
         ),
@@ -477,7 +570,6 @@ enum COLOR_MODE {
 
 class _WidgetSettingDialog extends StatefulWidget {
   final CourseLayout courseLayout;
-  final PreferenceProvider preferenceProvider;
   final double defaultDayOfWeekSize;
   final double defaultBackgroundOpacity;
   final double defaultNameSize;
@@ -486,7 +578,7 @@ class _WidgetSettingDialog extends StatefulWidget {
   final COLOR_MODE defaultNameColor;
   final Color defaultDayOfWeekBackground;
   final Color defaultTimetableBackground;
-  _WidgetSettingDialog(this.preferenceProvider,
+  _WidgetSettingDialog(
       {this.defaultDayOfWeekSize = 0,
       this.defaultBackgroundOpacity = 0,
       this.defaultNameSize = 0,
@@ -533,7 +625,8 @@ class _WidgetSettingDialogState extends State<_WidgetSettingDialog> {
     _isSelectedNameColor[COLOR_MODE.values.indexOf(nameColor)] = true;
   }
 
-  Widget getLabeledSlider(String title, double value, Function(double) onChanged, Function(double) onChangeEnd) {
+  Widget getLabeledSlider(String title, double value,
+      Function(double) onChanged, Function(double) onChangeEnd) {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -543,7 +636,10 @@ class _WidgetSettingDialogState extends State<_WidgetSettingDialog> {
             flex: 5,
             child: Text(
               title,
-              style: Theme.of(context).textTheme.bodyText2.apply(color: widget.courseLayout.secondaryColor),
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyText2
+                  .apply(color: widget.courseLayout.secondaryColor),
             ),
           ),
           Expanded(
@@ -563,7 +659,8 @@ class _WidgetSettingDialogState extends State<_WidgetSettingDialog> {
     );
   }
 
-  Widget getLabeledRadioButton(String title, COLOR_MODE color, List<bool> isSelected, Function(COLOR_MODE) onChanged) {
+  Widget getLabeledRadioButton(String title, COLOR_MODE color,
+      List<bool> isSelected, Function(COLOR_MODE) onChanged) {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -573,7 +670,10 @@ class _WidgetSettingDialogState extends State<_WidgetSettingDialog> {
             flex: 5,
             child: Text(
               title,
-              style: Theme.of(context).textTheme.bodyText2.apply(color: widget.courseLayout.secondaryColor),
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyText2
+                  .apply(color: widget.courseLayout.secondaryColor),
             ),
           ),
           Expanded(
@@ -590,19 +690,28 @@ class _WidgetSettingDialogState extends State<_WidgetSettingDialog> {
                       padding: EdgeInsets.symmetric(horizontal: 8),
                       child: Text(
                         'LIGHT',
-                        style: Theme.of(context).textTheme.bodyText2.apply(color: widget.courseLayout.secondaryColor),
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyText2
+                            .apply(color: widget.courseLayout.secondaryColor),
                       )),
                   Padding(
                       padding: EdgeInsets.symmetric(horizontal: 8),
                       child: Text(
                         'DARK',
-                        style: Theme.of(context).textTheme.bodyText2.apply(color: widget.courseLayout.secondaryColor),
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyText2
+                            .apply(color: widget.courseLayout.secondaryColor),
                       )),
                   Padding(
                       padding: EdgeInsets.symmetric(horizontal: 8),
                       child: Text(
                         'ADAPTIVE',
-                        style: Theme.of(context).textTheme.bodyText2.apply(color: widget.courseLayout.secondaryColor),
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyText2
+                            .apply(color: widget.courseLayout.secondaryColor),
                       )),
                 ],
                 onPressed: (index) {
@@ -622,7 +731,8 @@ class _WidgetSettingDialogState extends State<_WidgetSettingDialog> {
     );
   }
 
-  Widget getLabeledColorPicker(String title, Color color, Function(Color) onChanged) {
+  Widget getLabeledColorPicker(
+      String title, Color color, Function(Color) onChanged) {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -632,7 +742,10 @@ class _WidgetSettingDialogState extends State<_WidgetSettingDialog> {
             flex: 5,
             child: Text(
               title,
-              style: Theme.of(context).textTheme.bodyText2.apply(color: widget.courseLayout.secondaryColor),
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyText2
+                  .apply(color: widget.courseLayout.secondaryColor),
             ),
           ),
           Expanded(
@@ -646,7 +759,8 @@ class _WidgetSettingDialogState extends State<_WidgetSettingDialog> {
                     Radius.circular(4),
                   ),
                   border: Border.all(
-                    color: Color.lerp(widget.courseLayout.primaryColor, widget.courseLayout.secondaryColor, 0.5),
+                    color: Color.lerp(widget.courseLayout.primaryColor,
+                        widget.courseLayout.secondaryColor, 0.5),
                   ),
                 ),
                 child: FlatButton(
@@ -656,7 +770,9 @@ class _WidgetSettingDialogState extends State<_WidgetSettingDialog> {
                           context: context,
                           child: AlertDialog(
                             backgroundColor: widget.courseLayout.primaryColor,
-                            content: MaterialColorPicker(color, courseLayout: widget.courseLayout, onColorChanged: (newColor) {
+                            content: MaterialColorPicker(color,
+                                courseLayout: widget.courseLayout,
+                                onColorChanged: (newColor) {
                               newColorTemp = newColor;
                             }),
                             actions: [
@@ -685,8 +801,16 @@ class _WidgetSettingDialogState extends State<_WidgetSettingDialog> {
                       child: Padding(
                         padding: EdgeInsets.fromLTRB(4, 0, 0, 0),
                         child: Text(
-                          '#' + color.value.toRadixString(16).padLeft(8, '0').substring(2).toUpperCase(),
-                          style: Theme.of(context).textTheme.headline6.apply(color: useWhiteForeground(color) ? Colors.white : Colors.black),
+                          '#' +
+                              color.value
+                                  .toRadixString(16)
+                                  .padLeft(8, '0')
+                                  .substring(2)
+                                  .toUpperCase(),
+                          style: Theme.of(context).textTheme.headline6.apply(
+                              color: useWhiteForeground(color)
+                                  ? Colors.white
+                                  : Colors.black),
                         ),
                       ),
                     ),
@@ -710,51 +834,64 @@ class _WidgetSettingDialogState extends State<_WidgetSettingDialog> {
         ),
       ),
       child: Padding(
-        padding: EdgeInsets.fromLTRB(24, 24, 24, MediaQuery.of(context).viewInsets.bottom + 24),
+        padding: EdgeInsets.fromLTRB(
+            24, 24, 24, MediaQuery.of(context).viewInsets.bottom + 24),
         child: Column(
           children: [
             Text(
               'TEXT SIZE',
-              style: Theme.of(context).textTheme.subtitle1.apply(color: widget.courseLayout.secondaryColor),
+              style: Theme.of(context)
+                  .textTheme
+                  .subtitle1
+                  .apply(color: widget.courseLayout.secondaryColor),
             ),
             getLabeledSlider('DAY OF WEEK', dayOfWeekSize, (value) {
               setState(() {
                 dayOfWeekSize = value;
               });
             }, (value) {
-              widget.preferenceProvider.setPreference(Preference(PREF_TYPE.WIDGET_WEEK_SIZE, value));
+              PreferenceProvider.getInstance()
+                  .setPreference(Preference(PREF_TYPE.WIDGET_WEEK_SIZE, value));
             }),
             getLabeledSlider('NAME', nameSize, (value) {
               setState(() {
                 nameSize = value;
               });
             }, (value) {
-              widget.preferenceProvider.setPreference(Preference(PREF_TYPE.WIDGET_NAME_SIZE, value));
+              PreferenceProvider.getInstance()
+                  .setPreference(Preference(PREF_TYPE.WIDGET_NAME_SIZE, value));
             }),
             getLabeledSlider('ROOM', roomSize, (value) {
               setState(() {
                 roomSize = value;
               });
             }, (value) {
-              widget.preferenceProvider.setPreference(Preference(PREF_TYPE.WIDGET_ROOM_SIZE, value));
+              PreferenceProvider.getInstance()
+                  .setPreference(Preference(PREF_TYPE.WIDGET_ROOM_SIZE, value));
             }),
             Container(
               height: 16,
             ),
             Text(
               'DAY OF WEEK COLOR',
-              style: Theme.of(context).textTheme.subtitle1.apply(color: widget.courseLayout.secondaryColor),
+              style: Theme.of(context)
+                  .textTheme
+                  .subtitle1
+                  .apply(color: widget.courseLayout.secondaryColor),
             ),
-            getLabeledRadioButton('TEXT', dayOfWeekColor, _isSelectedDayOfWeekColor, (value) {
+            getLabeledRadioButton(
+                'TEXT', dayOfWeekColor, _isSelectedDayOfWeekColor, (value) {
               setState(() {
                 dayOfWeekColor = value;
-                widget.preferenceProvider.setPreference(Preference(PREF_TYPE.WIDGET_WEEK_COLOR, value));
+                PreferenceProvider.getInstance().setPreference(
+                    Preference(PREF_TYPE.WIDGET_WEEK_COLOR, value));
               });
             }),
             getLabeledColorPicker('BACKGROUND', dayOfWeekBackground, (value) {
               setState(() {
                 dayOfWeekBackground = value;
-                widget.preferenceProvider.setPreference(Preference(PREF_TYPE.WIDGET_WEEK_BACKGROUND, value));
+                PreferenceProvider.getInstance().setPreference(
+                    Preference(PREF_TYPE.WIDGET_WEEK_BACKGROUND, value));
               });
             }),
             Container(
@@ -762,18 +899,25 @@ class _WidgetSettingDialogState extends State<_WidgetSettingDialog> {
             ),
             Text(
               'TIMETABLE COLOR',
-              style: Theme.of(context).textTheme.subtitle1.apply(color: widget.courseLayout.secondaryColor),
+              style: Theme.of(context)
+                  .textTheme
+                  .subtitle1
+                  .apply(color: widget.courseLayout.secondaryColor),
             ),
-            getLabeledRadioButton('TEXT', nameColor, _isSelectedNameColor, (value) {
+            getLabeledRadioButton('TEXT', nameColor, _isSelectedNameColor,
+                (value) {
               setState(() {
                 dayOfWeekColor = value;
-                widget.preferenceProvider.setPreference(Preference(PREF_TYPE.WIDGET_CONTEXT_COLOR, value));
+                PreferenceProvider.getInstance().setPreference(
+                    Preference(PREF_TYPE.WIDGET_CONTEXT_COLOR, value));
               });
             }),
             getLabeledColorPicker('BACKGROUND', timetableBackground, (value) {
               setState(() {
                 timetableBackground = value;
-                widget.preferenceProvider.setPreference(Preference(PREF_TYPE.WIDGET_CONTEXT_BACKGROUND, timetableBackground.withOpacity(backgroundOpacity)));
+                PreferenceProvider.getInstance().setPreference(Preference(
+                    PREF_TYPE.WIDGET_CONTEXT_BACKGROUND,
+                    timetableBackground.withOpacity(backgroundOpacity)));
               });
             }),
             getLabeledSlider('OPACITY', backgroundOpacity, (value) {
@@ -781,7 +925,9 @@ class _WidgetSettingDialogState extends State<_WidgetSettingDialog> {
                 backgroundOpacity = value;
               });
             }, (value) {
-              widget.preferenceProvider.setPreference(Preference(PREF_TYPE.WIDGET_CONTEXT_BACKGROUND, timetableBackground.withOpacity(value)));
+              PreferenceProvider.getInstance().setPreference(Preference(
+                  PREF_TYPE.WIDGET_CONTEXT_BACKGROUND,
+                  timetableBackground.withOpacity(value)));
             }),
           ],
         ),
@@ -793,7 +939,8 @@ class _WidgetSettingDialogState extends State<_WidgetSettingDialog> {
 class _SessionSettingDialog extends StatefulWidget {
   final List<Session> defaultSessions;
   final CourseLayout courseLayout;
-  _SessionSettingDialog({Key key, this.courseLayout, this.defaultSessions}) : super(key: key);
+  _SessionSettingDialog({Key key, this.courseLayout, this.defaultSessions})
+      : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _SessionSettingDialogState();
@@ -803,9 +950,7 @@ class _SessionSettingDialogState extends State<_SessionSettingDialog> {
   List<Session> sessions;
 
   Future _saveToDB() async {
-    List<String> name = sessions.map((e) => e.name).toList();
-    List<TimeOfDayRange> time = sessions.map((e) => e.timeOfDayRange).toList();
-    await PreferenceProvider.getInstance().setPreferences([Preference(PREF_TYPE.SESSION_NAME, name), Preference(PREF_TYPE.SESSION_TIME, time),]);
+    await CourseProvider.getInstance().setSessions(sessions);
   }
 
   @override
@@ -814,7 +959,8 @@ class _SessionSettingDialogState extends State<_SessionSettingDialog> {
     sessions = List.of(widget.defaultSessions);
   }
 
-  Widget getSessionRow(Session session, GestureTapCallback onTap, Function(DismissDirection) onSwiped) {
+  Widget getSessionRow(Session session,
+      {GestureTapCallback onTap, Function(DismissDirection) onSwiped}) {
     Widget child = GestureDetector(
       onTap: onTap,
       child: Padding(
@@ -823,7 +969,8 @@ class _SessionSettingDialogState extends State<_SessionSettingDialog> {
         child: Container(
           height: 50,
           decoration: BoxDecoration(
-            color: Color.lerp(widget.courseLayout.primaryColor, Colors.white, 0.15),
+            color: Color.lerp(
+                widget.courseLayout.primaryColor, Colors.white, 0.15),
             boxShadow: [
               BoxShadow(color: Color.fromARGB(200, 70, 70, 70), blurRadius: 3),
             ],
@@ -838,13 +985,19 @@ class _SessionSettingDialogState extends State<_SessionSettingDialog> {
                   Expanded(
                     child: Text(
                       session.name,
-                      style: Theme.of(context).textTheme.headline6.apply(color: widget.courseLayout.secondaryColor),
+                      style: Theme.of(context)
+                          .textTheme
+                          .headline6
+                          .apply(color: widget.courseLayout.secondaryColor),
                     ),
                   ),
                   Flexible(
                     child: Text(
                       session.timeOfDayRange.toString(),
-                      style: Theme.of(context).textTheme.headline6.apply(color: widget.courseLayout.secondaryColor),
+                      style: Theme.of(context)
+                          .textTheme
+                          .headline6
+                          .apply(color: widget.courseLayout.secondaryColor),
                     ),
                   ),
                 ],
@@ -855,7 +1008,11 @@ class _SessionSettingDialogState extends State<_SessionSettingDialog> {
       ),
     );
 
-    return Dismissible(key: Key(session.hashCode.toString()), child: child, onDismissed: onSwiped,);
+    return Dismissible(
+      key: Key(session.hashCode.toString()),
+      child: child,
+      onDismissed: onSwiped,
+    );
   }
 
   @override
@@ -869,7 +1026,8 @@ class _SessionSettingDialogState extends State<_SessionSettingDialog> {
         ),
       ),
       child: Padding(
-        padding: EdgeInsets.fromLTRB(24, 48, 24, MediaQuery.of(context).viewInsets.bottom + 24),
+        padding: EdgeInsets.fromLTRB(
+            24, 48, 24, MediaQuery.of(context).viewInsets.bottom + 24),
         child: ScrollConfiguration(
           behavior: _ScrollBehaviour(),
           child: ReorderableColumn(
@@ -877,13 +1035,14 @@ class _SessionSettingDialogState extends State<_SessionSettingDialog> {
               setState(() {
                 Session t = sessions.removeAt(oldIndex);
                 sessions.insert(newIndex, t);
+                _saveToDB();
               });
             },
             children: [
               for (Session session in sessions)
                 getSessionRow(
                   session,
-                  () async {
+                  onTap: () async {
                     await showDialog(
                       context: context,
                       builder: (context) => AlertDialog(
@@ -897,11 +1056,10 @@ class _SessionSettingDialogState extends State<_SessionSettingDialog> {
                     await _saveToDB();
                     setState(() {});
                   },
-                  (_) async {
+                  onSwiped: (_) async {
                     sessions.remove(session);
                     await _saveToDB();
-                    setState(() {
-                    });
+                    setState(() {});
                   },
                 ),
             ],
@@ -942,7 +1100,8 @@ class _SessionSettingDialogState extends State<_SessionSettingDialog> {
                           },
                           child: Text(
                             'Cancel',
-                            style: Theme.of(context).textTheme.subtitle1.apply(color: widget.courseLayout.secondaryColor),
+                            style: Theme.of(context).textTheme.subtitle1.apply(
+                                color: widget.courseLayout.secondaryColor),
                           ),
                         ),
                         FlatButton(
@@ -951,7 +1110,8 @@ class _SessionSettingDialogState extends State<_SessionSettingDialog> {
                           },
                           child: Text(
                             'CONFIRM',
-                            style: Theme.of(context).textTheme.subtitle1.apply(color: widget.courseLayout.secondaryColor),
+                            style: Theme.of(context).textTheme.subtitle1.apply(
+                                color: widget.courseLayout.secondaryColor),
                           ),
                         ),
                       ],
@@ -966,9 +1126,12 @@ class _SessionSettingDialogState extends State<_SessionSettingDialog> {
                 child: Container(
                   height: 50,
                   decoration: BoxDecoration(
-                    color: Color.lerp(widget.courseLayout.primaryColor, Colors.white, 0.15),
+                    color: Color.lerp(
+                        widget.courseLayout.primaryColor, Colors.white, 0.15),
                     boxShadow: [
-                      BoxShadow(color: Color.fromARGB(200, 70, 70, 70), blurRadius: 2),
+                      BoxShadow(
+                          color: Color.fromARGB(200, 70, 70, 70),
+                          blurRadius: 2),
                     ],
                   ),
                   width: double.infinity,
@@ -998,7 +1161,8 @@ class _SessionSettingDialogState extends State<_SessionSettingDialog> {
 
 class _ScrollBehaviour extends ScrollBehavior {
   @override
-  Widget buildViewportChrome(BuildContext context, Widget child, AxisDirection axisDirection) {
+  Widget buildViewportChrome(
+      BuildContext context, Widget child, AxisDirection axisDirection) {
     return child;
   }
 }
@@ -1006,7 +1170,8 @@ class _ScrollBehaviour extends ScrollBehavior {
 class _SessionConfigDialog extends StatefulWidget {
   final Session session;
   final CourseLayout courseLayout;
-  _SessionConfigDialog({Key key, this.courseLayout, this.session}) : super(key: key);
+  _SessionConfigDialog({Key key, this.courseLayout, this.session})
+      : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _SessionConfigDialogState();
@@ -1026,11 +1191,15 @@ class _SessionConfigDialogState extends State<_SessionConfigDialog> {
                 child: Text(
                   widget.session.name,
                   textAlign: TextAlign.start,
-                  style: Theme.of(context).textTheme.headline6.apply(color: widget.courseLayout.secondaryColor),
+                  style: Theme.of(context)
+                      .textTheme
+                      .headline6
+                      .apply(color: widget.courseLayout.secondaryColor),
                 ),
               ),
               onPressed: () async {
-                TextEditingController textEditingController = TextEditingController();
+                TextEditingController textEditingController =
+                    TextEditingController();
                 String newName = await showDialog(
                   context: context,
                   child: AlertDialog(
@@ -1041,8 +1210,26 @@ class _SessionConfigDialogState extends State<_SessionConfigDialog> {
                       courseLayout: widget.courseLayout,
                     ),
                     actions: [
-                      FlatButton(onPressed: () {Navigator.pop(context);}, child: Text('Cancel', style: Theme.of(context).textTheme.subtitle1.apply(color: widget.courseLayout.secondaryColor),),),
-                      FlatButton(onPressed: () {Navigator.pop(context, textEditingController.text);}, child: Text('CONFIRM', style: Theme.of(context).textTheme.subtitle1.apply(color: widget.courseLayout.secondaryColor)),),
+                      FlatButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        child: Text(
+                          'Cancel',
+                          style: Theme.of(context)
+                              .textTheme
+                              .subtitle1
+                              .apply(color: widget.courseLayout.secondaryColor),
+                        ),
+                      ),
+                      FlatButton(
+                        onPressed: () {
+                          Navigator.pop(context, textEditingController.text);
+                        },
+                        child: Text('CONFIRM',
+                            style: Theme.of(context).textTheme.subtitle1.apply(
+                                color: widget.courseLayout.secondaryColor)),
+                      ),
                     ],
                   ),
                 );
@@ -1070,19 +1257,29 @@ class _SessionConfigDialogState extends State<_SessionConfigDialog> {
               child: Text(
                 widget.session.timeOfDayRange.start.toFormattedString(),
                 softWrap: false,
-                style: Theme.of(context).textTheme.headline6.apply(color: widget.courseLayout.secondaryColor),
+                style: Theme.of(context)
+                    .textTheme
+                    .headline6
+                    .apply(color: widget.courseLayout.secondaryColor),
               ),
             ),
           ),
           Text(
             " - ",
-            style: Theme.of(context).textTheme.headline6.apply(color: widget.courseLayout.secondaryColor),
+            style: Theme.of(context)
+                .textTheme
+                .headline6
+                .apply(color: widget.courseLayout.secondaryColor),
           ),
           Flexible(
             child: FlatButton(
               onPressed: () async {
                 TimeOfDay time = await showTimePicker(
-                    context: context, initialTime: widget.session.timeOfDayRange.end, helpText: "SELECT TIME", cancelText: "Cancel", confirmText: "CONFIRM");
+                    context: context,
+                    initialTime: widget.session.timeOfDayRange.end,
+                    helpText: "SELECT TIME",
+                    cancelText: "Cancel",
+                    confirmText: "CONFIRM");
                 if (time != null)
                   setState(() {
                     widget.session.timeOfDayRange.end = time;
@@ -1091,7 +1288,10 @@ class _SessionConfigDialogState extends State<_SessionConfigDialog> {
               child: Text(
                 widget.session.timeOfDayRange.end.toFormattedString(),
                 softWrap: false,
-                style: Theme.of(context).textTheme.headline6.apply(color: widget.courseLayout.secondaryColor),
+                style: Theme.of(context)
+                    .textTheme
+                    .headline6
+                    .apply(color: widget.courseLayout.secondaryColor),
               ),
             ),
           ),
@@ -1105,7 +1305,14 @@ class _TextInputDialog extends StatefulWidget {
   final CourseLayout courseLayout;
   final String defaultValue;
   final TextEditingController textEditingController;
-  _TextInputDialog({Key key, this.textEditingController, this.defaultValue, this.courseLayout}) : super(key: key);
+  final List<String> blacklist;
+  _TextInputDialog(
+      {Key key,
+      this.textEditingController,
+      this.defaultValue,
+      this.courseLayout,
+      this.blacklist=const []})
+      : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _TextInputDialogState();
@@ -1116,6 +1323,11 @@ class _TextInputDialogState extends State<_TextInputDialog> {
   void initState() {
     super.initState();
     widget.textEditingController.text = widget.defaultValue;
+    widget.textEditingController.addListener(() {
+      setState(() {
+
+      });
+    });
   }
 
   @override
@@ -1126,8 +1338,10 @@ class _TextInputDialogState extends State<_TextInputDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: TextField(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      mainAxisSize: MainAxisSize.min,
+      children: [TextField(
         controller: widget.textEditingController,
         decoration: InputDecoration(
           focusedBorder: OutlineInputBorder(
@@ -1145,7 +1359,270 @@ class _TextInputDialogState extends State<_TextInputDialog> {
             ),
           ),
         ),
-        style: Theme.of(context).textTheme.headline6.apply(color: widget.courseLayout.secondaryColor),
+        style: Theme.of(context)
+            .textTheme
+            .headline6
+            .apply(color: widget.courseLayout.secondaryColor),
+      ),
+        Container(height: 24,),
+        Text(widget.blacklist.contains(widget.textEditingController.text) ? 'File already exists.' : '', style: Theme.of(context).textTheme.subtitle1.apply(color: Colors.red),),
+      ],
+    );
+  }
+}
+
+class _PathConfigDialog extends StatefulWidget {
+  final CourseLayout courseLayout;
+  final Function(MainPageCallBackMSG, [dynamic]) callback;
+  _PathConfigDialog(
+      {Key key,
+      this.courseLayout,
+      this.callback})
+      : super(key: key);
+
+  @override
+  State<StatefulWidget> createState() => _PathConfigDialogState();
+}
+
+class _PathConfigDialogState extends State<_PathConfigDialog> {
+  List<String> coursePathList = [];
+  String coursePath = '';
+  List<String> preferencePathList = [];
+  String preferencePath = '';
+
+  @override
+  void initState() {
+    super.initState();
+    loadDB()
+    .then((_) => setState(() {}));
+  }
+
+  Future loadDB() async {
+    List<Map> coursePaths =
+    await PathProvider.getInstance().getPathByType(PATH_TYPE.COURSE);
+    coursePathList = coursePaths.map((e) => e[COLUMN_PATH_NAME] as String).toList();
+    coursePath = coursePaths.firstWhere(
+            (element) => element[COLUMN_PATH_IN_USE] == 1)[COLUMN_PATH_NAME];
+    List<Map> preferencePaths = await PathProvider.getInstance().getPathByType(PATH_TYPE.PREF);
+    preferencePathList = preferencePaths.map((e) => e[COLUMN_PATH_NAME] as String).toList();
+    preferencePath = preferencePaths.firstWhere(
+            (element) => element[COLUMN_PATH_IN_USE] == 1)[COLUMN_PATH_NAME];
+  }
+
+  Widget getDropDownButton(
+      List<String> items, String value, Function(String) onChanged, Function() onDeleted) {
+    return Row(
+      children: [
+        Expanded(
+          child: DropdownButton<String>(
+            isExpanded: true,
+            dropdownColor: widget.courseLayout.primaryColor,
+            value: value,
+            icon: Icon(Icons.keyboard_arrow_down),
+            iconSize: 24,
+            elevation: 4,
+            style: Theme.of(context)
+                .textTheme
+                .subtitle1
+                .apply(color: widget.courseLayout.secondaryColor),
+            underline: Container(
+              height: 2,
+              color: Colors.deepPurpleAccent,
+            ),
+            onChanged: onChanged,
+            items: [
+              for (String path in items)
+                DropdownMenuItem(
+                  value: path,
+                  child: Container(
+                    child: Text(
+                      path,
+                      style: Theme.of(context)
+                          .textTheme
+                          .subtitle2
+                          .apply(color: widget.courseLayout.secondaryColor),
+                    ),
+                  ),
+                ),
+              DropdownMenuItem(
+                value: '',
+                child: Container(
+                  child: Text(
+                    'ADD...',
+                    style: Theme.of(context)
+                        .textTheme
+                        .subtitle2
+                        .apply(color: widget.courseLayout.secondaryColor),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        IconButton(icon: Icon(Icons.delete), onPressed: onDeleted,),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: widget.courseLayout.primaryColor,
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(20),
+        ),
+      ),
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+            24, 48, 24, MediaQuery.of(context).viewInsets.bottom + 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Course Database File',
+              style: Theme.of(context)
+                  .textTheme
+                  .subtitle1
+                  .apply(color: widget.courseLayout.secondaryColor),
+            ),
+            getDropDownButton(coursePathList, coursePath, (val) async {
+              if (val != '')
+                setState(() {
+                  coursePath = val;
+                  PathProvider.getInstance().setInUse(PATH_TYPE.COURSE, val);
+                });
+              else {
+                TextEditingController textEditingController =
+                    TextEditingController();
+                String filename = await showDialog(
+                  context: context,
+                  child: AlertDialog(
+                    backgroundColor: widget.courseLayout.primaryColor,
+                    content: _TextInputDialog(
+                      textEditingController: textEditingController,
+                      blacklist: coursePathList,
+                      defaultValue: 'New File',
+                      courseLayout: widget.courseLayout,
+                    ),
+                    actions: [
+                      FlatButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        child: Text(
+                          'Cancel',
+                          style: Theme.of(context)
+                              .textTheme
+                              .subtitle1
+                              .apply(color: widget.courseLayout.secondaryColor),
+                        ),
+                      ),
+                      FlatButton(
+                        onPressed: () {
+                          if (!coursePathList.contains(textEditingController.text))
+                          Navigator.pop(context, textEditingController.text);
+                        },
+                        child: Text('CONFIRM',
+                            style: Theme.of(context).textTheme.subtitle1.apply(
+                                color: widget.courseLayout.secondaryColor)),
+                      ),
+                    ],
+                  ),
+                );
+                if (filename != null) {
+                  await PathProvider.getInstance()
+                      .createPath(PATH_TYPE.COURSE, filename);
+                  await PathProvider.getInstance()
+                      .setInUse(PATH_TYPE.COURSE, filename);
+                  coursePathList.add(filename);
+                  setState(() {
+                    coursePath = filename;
+                  });
+                }
+              }
+              widget.callback?.call(MainPageCallBackMSG.RELOAD_DB, PATH_TYPE.COURSE);
+            }, () async {
+              await CourseProvider.getInstance().close();
+              await PathProvider.getInstance().deletePath(PATH_TYPE.COURSE, coursePath);
+              loadDB().then((_) => setState(() {widget.callback(MainPageCallBackMSG.RELOAD_DB, PATH_TYPE.COURSE);}));
+            }),
+            Container(
+              height: 24,
+            ),
+            Text(
+              'Preference Database File',
+              style: Theme.of(context)
+                  .textTheme
+                  .subtitle1
+                  .apply(color: widget.courseLayout.secondaryColor),
+            ),
+            getDropDownButton(preferencePathList, preferencePath, (val) async {
+              if (val != '')
+                setState(() {
+                  preferencePath = val;
+                  PathProvider.getInstance().setInUse(PATH_TYPE.PREF, val);
+                });
+              else {
+                TextEditingController textEditingController =
+                TextEditingController();
+                String filename = await showDialog(
+                  context: context,
+                  child: AlertDialog(
+                    backgroundColor: widget.courseLayout.primaryColor,
+                    content: _TextInputDialog(
+                      textEditingController: textEditingController,
+                      blacklist: preferencePathList,
+                      defaultValue: 'New File',
+                      courseLayout: widget.courseLayout,
+                    ),
+                    actions: [
+                      FlatButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        child: Text(
+                          'Cancel',
+                          style: Theme.of(context)
+                              .textTheme
+                              .subtitle1
+                              .apply(color: widget.courseLayout.secondaryColor),
+                        ),
+                      ),
+                      FlatButton(
+                        onPressed: () {
+                          if (!preferencePathList.contains(textEditingController.text))
+                            Navigator.pop(context, textEditingController.text);
+                        },
+                        child: Text('CONFIRM',
+                            style: Theme.of(context).textTheme.subtitle1.apply(
+                                color: widget.courseLayout.secondaryColor)),
+                      ),
+                    ],
+                  ),
+                );
+                if (filename != null) {
+                  await PathProvider.getInstance()
+                      .createPath(PATH_TYPE.PREF, filename);
+                  await PathProvider.getInstance()
+                      .setInUse(PATH_TYPE.PREF, filename);
+                  preferencePathList.add(filename);
+                  setState(() {
+                    preferencePath = filename;
+                  });
+                }
+              }
+              widget.callback?.call(MainPageCallBackMSG.RELOAD_DB, PATH_TYPE.PREF);
+            }, () async {
+              await PreferenceProvider.getInstance().close();
+              await PathProvider.getInstance().deletePath(PATH_TYPE.PREF, preferencePath);
+              loadDB().then((_) => setState(() {widget.callback(MainPageCallBackMSG.RELOAD_DB, PATH_TYPE.PREF);}));
+            }),
+            Container(
+              height: 24,
+            ),
+          ],
+        ),
       ),
     );
   }

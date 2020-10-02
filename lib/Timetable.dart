@@ -1,14 +1,15 @@
 import 'dart:ui';
 
-import 'package:course_timetable_remake/DBPreference.dart';
-import 'package:course_timetable_remake/Dialog.dart';
-import 'package:course_timetable_remake/Preference.dart';
-import 'package:course_timetable_remake/Resources.dart';
+import 'package:flutter/rendering.dart';
+
+import 'DBPreference.dart';
+import 'Dialog.dart';
+import 'Preference.dart';
+import 'Resources.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
-import 'package:intl/intl.dart';
 
 import 'Course.dart';
 import 'MessageSnackBar.dart';
@@ -20,11 +21,15 @@ class Timetable extends StatefulWidget {
   final List<Course> courses;
   final List<Session> sessions;
   final CourseLayout courseLayout;
-  final void Function() saveCourseToDB;
+  final void Function(List) saveCourseToDB;
   final void Function(Function()) refresh;
+  final GlobalKey timetableKey;
+  final GlobalKey weekBarKey;
 
   Timetable(
       {this.refresh,
+      this.timetableKey,
+      this.weekBarKey,
       this.saveCourseToDB,
       this.courses = const [],
       this.sessions = const [],
@@ -57,7 +62,6 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
       HapticFeedback.vibrate();
     } else {
       _animationController.reverse();
-      widget.saveCourseToDB?.call();
     }
     editMode = val;
   }
@@ -85,7 +89,7 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
               height: 6,
             ),
             Text(
-                session.timeOfDayRange.start.toFormattedString(),
+              session.timeOfDayRange.start.toFormattedString(),
               style: Theme.of(context)
                   .textTheme
                   .caption
@@ -323,6 +327,7 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
                     chosen[data] = chosen[index];
                     widget.courses[index] = course;
                     chosen[index] = chosenStatus;
+                    widget.saveCourseToDB(widget.courses);
                   });
                 }),
           )
@@ -374,20 +379,25 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
           ),
           child: ScrollConfiguration(
             behavior: _TimetableListViewBehaviour(),
-            child: ListView(
-              shrinkWrap: true,
-              children: [
-                ...widget.sessions.asMap().entries.map((e) {
-                  int index = e.key;
-                  Session session = e.value;
-                  return getRow(
-                    session,
-                    index,
-                    index == widget.sessions.length - 1,
-                    widget.courses.sublist(7 * index, 7 * index + 7),
-                  );
-                }).toList(),
-              ],
+            child: SingleChildScrollView(
+              child: RepaintBoundary(
+                key: widget.timetableKey,
+                child: Column(
+                  //shrinkWrap: true,
+                  children: [
+                    ...widget.sessions.asMap().entries.map((e) {
+                      int index = e.key;
+                      Session session = e.value;
+                      return getRow(
+                        session,
+                        index,
+                        index == widget.sessions.length - 1,
+                        widget.courses.sublist(7 * index, 7 * index + 7),
+                      );
+                    }).toList(),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
@@ -431,7 +441,7 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
           roomSize == null &&
           dayOfWeekSize == null &&
           roomColor == null)
-        fetchDB();
+        fetchPreferences();
       else
         setState(() {
           prefs[PREF_TYPE.CONFIG_NAME_SIZE].value =
@@ -449,7 +459,7 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
     });
   }
 
-  void fetchDB() async {
+  void fetchPreferences() async {
     prefs = await _preferenceProvider?.getPreferences();
     setState(() {});
   }
@@ -488,6 +498,7 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
             child: getMainBody(),
           ),
           _WeekBar(
+            weekBarKey: widget.weekBarKey,
             courseLayout: widget.courseLayout,
             blankWidth: _sessionWidth,
             height: _barHeight,
@@ -648,6 +659,7 @@ class _TimetableState extends State<Timetable> with TickerProviderStateMixin {
                   );
                   break;
               }
+              widget.saveCourseToDB?.call(widget.courses);
               setState(() {});
             },
           ),
@@ -670,8 +682,10 @@ class _WeekBar extends StatelessWidget {
   final double blankWidth;
   final double height;
   final double dayOfWeekSize;
+  final GlobalKey weekBarKey;
   _WeekBar(
       {this.dayOfWeekSize,
+      this.weekBarKey,
       this.courseLayout = const CourseLayout.light(),
       this.blankWidth,
       this.height,
@@ -681,43 +695,46 @@ class _WeekBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final List<String> week = S.of(context).weekDays.split(',');
-    return Align(
-      alignment: Alignment.topCenter,
-      child: Container(
-        decoration: BoxDecoration(
-          color: courseLayout.primaryColor,
-          boxShadow: [
-            BoxShadow(
-              color: Color.fromARGB(100, 10, 10, 10),
-              offset: Offset(0.0, 1.0),
-              blurRadius: 3,
-              spreadRadius: 2,
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Container(
-              width: blankWidth,
-              height: height,
-            ),
-            for (String day in week)
-              Expanded(
-                child: Padding(
-                  padding: EdgeInsets.fromLTRB(4, 8, 0, 4),
-                  child: Text(
-                    day,
-                    style: Theme.of(context).textTheme.caption.apply(
-                          color: courseLayout.secondaryColor,
-                          fontSizeFactor: dayOfWeekSize,
-                        ),
+    return RepaintBoundary(
+      key: weekBarKey,
+      child: Align(
+        alignment: Alignment.topCenter,
+        child: Container(
+          decoration: BoxDecoration(
+            color: courseLayout.primaryColor,
+            boxShadow: [
+              BoxShadow(
+                color: Color.fromARGB(100, 10, 10, 10),
+                offset: Offset(0.0, 1.0),
+                blurRadius: 3,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.max,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Container(
+                width: blankWidth,
+                height: height,
+              ),
+              for (String day in week)
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(4, 8, 0, 4),
+                    child: Text(
+                      day,
+                      style: Theme.of(context).textTheme.caption.apply(
+                            color: courseLayout.secondaryColor,
+                            fontSizeFactor: dayOfWeekSize,
+                          ),
+                    ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );

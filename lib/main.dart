@@ -1,6 +1,5 @@
-import 'package:course_timetable_remake/Dialog.dart';
-import 'package:course_timetable_remake/Preference.dart';
-import 'package:course_timetable_remake/TimeOfDayRange.dart';
+import 'Dialog.dart';
+import 'Preference.dart';
 
 import 'Course.dart';
 import 'DBPath.dart';
@@ -51,108 +50,147 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
-  CourseProvider _courseProvider;
-  PreferenceProvider _preferenceProvider;
-  PathProvider _pathProvider;
+  CourseProvider courseProvider;
+  PreferenceProvider preferenceProvider;
+  PathProvider pathProvider;
   bool darkMode = false;
+  bool initDone = false;
   List<Session> sessions = List();
   List<Course> courses = List();
-  void Function({double nameSize, double roomSize, double dayOfWeekSize, COLOR_MODE roomColor}) refreshTimetable;
+  void Function(
+      {double nameSize,
+      double roomSize,
+      double dayOfWeekSize,
+      COLOR_MODE roomColor}) updateTimetable;
+  GlobalKey timetableKey = GlobalKey();
+  GlobalKey weekBarKey = GlobalKey();
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    initDB();
+
+    pathProvider = PathProvider.getInstance();
+    courseProvider = CourseProvider.getInstance();
+    preferenceProvider = PreferenceProvider.getInstance();
+
+    openDB()
+        .then((_) => Future.wait([
+              loadCourses(),
+              loadPreferences(),
+              loadSessions(),
+            ]))
+        .then((_) => updateTimetable())
+        .then((_) => setState(() {
+              initDone = true;
+            }));
   }
 
-  Future initDB() async {
-    _pathProvider = PathProvider.getInstance();
-    _courseProvider = CourseProvider.getInstance();
-    _preferenceProvider = PreferenceProvider.getInstance();
-    Map map = await _pathProvider.getPathInUse();
-    await CourseProvider.open(map[PATH_TYPE.COURSE]);
-    await PreferenceProvider.open(map[PATH_TYPE.PREF]);
+  Future openDB([PATH_TYPE type]) async {
+    Map path = await pathProvider.getPathInUse();
+    if (type == PATH_TYPE.COURSE)
+      await CourseProvider.open(path[PATH_TYPE.COURSE]);
+    else if (type == PATH_TYPE.PREF)
+      await PreferenceProvider.open(path[PATH_TYPE.PREF]);
+    else {
+      await PreferenceProvider.open(path[PATH_TYPE.PREF])
+          .then((_) => CourseProvider.open(path[PATH_TYPE.COURSE]));
+    }
+  }
 
-    refreshTimetable();
-
+  Future loadPreferences() async {
     darkMode =
-        (await _preferenceProvider.getPreference(PREF_TYPE.DARK_MODE)).value;
-    List sessionName =
-        (await _preferenceProvider.getPreference(PREF_TYPE.SESSION_NAME)).value;
-    List sessionTime =
-        (await _preferenceProvider.getPreference(PREF_TYPE.SESSION_TIME)).value;
-    sessions = sessionName
-        .asMap()
-        .entries
-        .map((e) => Session(name: e.value, timeOfDayRange: sessionTime[e.key]))
-        .toList();
-
-    reloadCourse();
+        (await preferenceProvider.getPreference(PREF_TYPE.DARK_MODE)).value;
   }
 
-  Future reloadCourse() async {
-    courses = await _courseProvider.getCourses();
-    setState(() {});
+  Future loadCourses() async {
+    courses = await courseProvider.getCourses();
   }
 
-  Future reloadSession() async {
-    Map<PREF_TYPE, Preference> map = await _preferenceProvider.getPreferencesFromType([PREF_TYPE.SESSION_NAME, PREF_TYPE.SESSION_TIME]);
-    sessions = (map[PREF_TYPE.SESSION_NAME].value as List<String>).asMap().entries.map((e) => Session(name: e.value, timeOfDayRange: map[PREF_TYPE.SESSION_TIME].value[e.key])).toList();
-    await _courseProvider.applySession(sessions.length);
-    reloadCourse();
+  Future loadSessions() async {
+    sessions = await CourseProvider.getInstance().getSessions();
+    await courseProvider.applySession(sessions.length);
+    await loadCourses();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _courseProvider.close();
-    _pathProvider.close();
-    _preferenceProvider.close();
+    courseProvider.close();
+    pathProvider.close();
+    preferenceProvider.close();
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    _courseProvider.setCourses(courses);
+    courseProvider.setCourses(courses);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(S.of(context).appTitle)),
-      drawer: MainPageDrawer(
-        preferenceProvider: _preferenceProvider,
-        courseLayout: darkMode ? CourseLayout.dark() : CourseLayout.light(),
-        darkMode: darkMode,
-        callback: (msg, [arg]) async {
-          switch (msg) {
-            case MainPageCallBackMSG.SET_DARK_MODE:
-              setState(() {
-                darkMode = arg;
-              });
-              await _preferenceProvider
-                  .setPreference(Preference(PREF_TYPE.DARK_MODE, arg));
-              break;
-            case MainPageCallBackMSG.SET_CONFIG_APPEARANCE:
-              refreshTimetable(nameSize: arg['nameSize'], roomSize: arg['roomSize'], dayOfWeekSize: arg['dayOfWeekSize'], roomColor: arg['roomColor'],);
-              break;
-            case MainPageCallBackMSG.SET_SESSION:
-              reloadSession();
-              break;
-          }
-        },
+      drawer: Builder(
+        builder: (context) => MainPageDrawer(
+          timetableKey: timetableKey,
+          weekBarKey: weekBarKey,
+          preferenceProvider: preferenceProvider,
+          courseLayout: darkMode ? CourseLayout.dark() : CourseLayout.light(),
+          darkMode: darkMode,
+          callback: (msg, [arg]) async {
+            switch (msg) {
+              case MainPageCallBackMSG.SET_DARK_MODE:
+                setState(() {
+                  darkMode = arg;
+                });
+                await preferenceProvider
+                    .setPreference(Preference(PREF_TYPE.DARK_MODE, arg));
+                break;
+              case MainPageCallBackMSG.SET_CONFIG_APPEARANCE:
+                updateTimetable(
+                  nameSize: arg['nameSize'],
+                  roomSize: arg['roomSize'],
+                  dayOfWeekSize: arg['dayOfWeekSize'],
+                  roomColor: arg['roomColor'],
+                );
+                break;
+              case MainPageCallBackMSG.SET_SESSION:
+                loadSessions().then((_) => setState(() {
+                      updateTimetable();
+                    }));
+                break;
+              case MainPageCallBackMSG.RELOAD_DB:
+                if (arg == PATH_TYPE.COURSE)
+                  openDB(PATH_TYPE.COURSE)
+                      .then((_) => Future.wait([
+                            loadCourses(),
+                            loadSessions(),
+                          ]))
+                      .then((_) => setState(() {
+                            updateTimetable();
+                          }));
+                else if (arg == PATH_TYPE.PREF)
+                  openDB(PATH_TYPE.PREF)
+                      .then((_) => loadCourses())
+                      .then((_) => updateTimetable());
+                break;
+            }
+          },
+        ),
       ),
       body: Timetable(
+        timetableKey: timetableKey,
+        weekBarKey: weekBarKey,
         courses: courses,
-        sessions: sessions,
+        sessions: initDone ? sessions : [],
         courseLayout: darkMode ? CourseLayout.dark() : CourseLayout.light(),
-        saveCourseToDB: () async {
-          await _courseProvider.setCourses(courses);
-          await reloadCourse();
+        saveCourseToDB: (courses) async {
+          await courseProvider.setCourses(courses);
+          await loadCourses();
         },
         refresh: (refresh) {
-          refreshTimetable = refresh;
+          updateTimetable = refresh;
         },
       ),
     );

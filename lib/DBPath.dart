@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:sqflite/sqflite.dart';
 
 const String _COLUMN_ID = '_id';
@@ -5,7 +7,7 @@ const String COLUMN_PATH_IN_USE = 'in_use';
 const String COLUMN_PATH_NAME = 'name';
 const String COLUMN_PATH_TYPE = 'type';
 const String _TABLE_NAME = 'path';
-const int _DB_VERSION = 2;
+const int _DB_VERSION = 100;
 
 enum PATH_TYPE {
   COURSE,
@@ -29,8 +31,8 @@ class PathProvider {
         $COLUMN_PATH_IN_USE integer not null,
         $COLUMN_PATH_NAME text not null)
       ''');
-    db.insert(_TABLE_NAME, {COLUMN_PATH_NAME: 'Courses', COLUMN_PATH_TYPE: PATH_TYPE.COURSE.toString(), COLUMN_PATH_IN_USE: 1});
-    db.insert(_TABLE_NAME, {COLUMN_PATH_NAME: 'Preferences', COLUMN_PATH_TYPE: PATH_TYPE.PREF.toString(), COLUMN_PATH_IN_USE: 1});
+    db.insert(_TABLE_NAME, {COLUMN_PATH_NAME: 'Courses.db', COLUMN_PATH_TYPE: PATH_TYPE.COURSE.toString(), COLUMN_PATH_IN_USE: 1});
+    db.insert(_TABLE_NAME, {COLUMN_PATH_NAME: 'Preferences.db', COLUMN_PATH_TYPE: PATH_TYPE.PREF.toString(), COLUMN_PATH_IN_USE: 1});
   }
 
   void _onUpgrade(Database db, int versionOld, int version) async {
@@ -94,7 +96,7 @@ class PathProvider {
     }
   }
 
-  void setInUse(PATH_TYPE type, String name) async {
+  Future setInUse(PATH_TYPE type, String name) async {
     if(db == null) await open();
     var batch = db.batch();
     batch.rawUpdate("""
@@ -108,6 +110,34 @@ class PathProvider {
       WHERE $COLUMN_PATH_TYPE = '$type' AND $COLUMN_PATH_NAME = '$name'
     """);
     await batch.commit();
+  }
+
+  Future deletePath(PATH_TYPE type, String name) async {
+    if(db == null) await open();
+    bool isInUse = Sqflite.firstIntValue(await(db.rawQuery('''
+      SELECT COUNT(*)
+      FROM $_TABLE_NAME
+      WHERE $COLUMN_PATH_TYPE = '$type' and $COLUMN_PATH_NAME = '$name' and $COLUMN_PATH_IN_USE = 1
+    '''))) > 0;
+    await db.rawDelete('''
+      DELETE FROM $_TABLE_NAME
+      WHERE $COLUMN_PATH_TYPE = '$type' AND $COLUMN_PATH_NAME = '$name'
+    ''');
+
+    String path = (await getDatabasesPath() + '/' + name);
+    await deleteDatabase(path);
+
+    int pathCount = Sqflite.firstIntValue(await(db.rawQuery('''
+      SELECT COUNT(*)
+      FROM $_TABLE_NAME
+      WHERE $COLUMN_PATH_TYPE = '$type'
+    ''')));
+    if(pathCount == 0)
+      await createPath(type, type == PATH_TYPE.COURSE ? 'Courses.db' : 'Preferences.db');
+    if(isInUse) {
+      String firstPath = (await db.query(_TABLE_NAME, columns: [COLUMN_PATH_NAME], where: '$COLUMN_PATH_TYPE = ?', whereArgs: [type.toString()]))[0][COLUMN_PATH_NAME];
+      setInUse(type, firstPath);
+    }
   }
 
   Future close() async => await db.close();
